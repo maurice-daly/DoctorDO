@@ -1,0 +1,1174 @@
+{
+  "$ref": "#/definitions/DoctorDOTelemetryV1",
+  "definitions": {
+    "DoctorDOTelemetryV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "telemetry"
+        },
+        "collector": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "DoctorDO.Collector"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+"
+            }
+          },
+          "required": [
+            "name",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "collectedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inventoryHash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "period": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+            },
+            "to": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+            }
+          },
+          "required": [
+            "from",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        "vitals": {
+          "type": "object",
+          "properties": {
+            "onBattery": {
+              "type": "boolean"
+            },
+            "batteryPercent": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "batteryLow": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "systemDiskFreeGB": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "cacheUsedBytes": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d+$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "isVpnActive": {
+              "type": "boolean"
+            },
+            "adapterType": {
+              "type": "string",
+              "enum": [
+                "Ethernet",
+                "Wi-Fi",
+                "Cellular",
+                "VPN",
+                "Other",
+                "Unknown"
+              ]
+            },
+            "localSubnet": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "publicEgressHash": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "cacheDriveFreeGB": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "onBattery",
+            "batteryPercent",
+            "systemDiskFreeGB",
+            "cacheUsedBytes",
+            "isVpnActive",
+            "adapterType",
+            "localSubnet",
+            "publicEgressHash"
+          ],
+          "additionalProperties": false
+        },
+        "counters": {
+          "type": "string",
+          "enum": [
+            "delta",
+            "baseline",
+            "snapshot"
+          ]
+        },
+        "perf": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "downloadHttpBytes": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^\\d+$"
+                    },
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  ]
+                },
+                "downloadLanBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "downloadGroupBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "downloadInternetBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "downloadCacheHostBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "uploadLanBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "uploadGroupBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "uploadInternetBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "foregroundDownloadBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "backgroundDownloadBytes": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                "numberOfPeers": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cacheHostConnections": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "averageDownloadKBps": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "downloadHttpBytes",
+                "downloadLanBytes",
+                "downloadGroupBytes",
+                "downloadInternetBytes",
+                "downloadCacheHostBytes",
+                "uploadLanBytes",
+                "uploadInternetBytes",
+                "foregroundDownloadBytes",
+                "backgroundDownloadBytes",
+                "numberOfPeers",
+                "cacheHostConnections",
+                "averageDownloadKBps"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "size": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+              },
+              "b": {
+                "type": "array",
+                "minItems": 5,
+                "maxItems": 5,
+                "items": [
+                  {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                  },
+                  {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                  },
+                  {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                  },
+                  {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                  },
+                  {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                  }
+                ]
+              },
+              "mode": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string"
+              },
+              "pri": {
+                "type": "string",
+                "enum": [
+                  "Foreground",
+                  "Background",
+                  "Unknown"
+                ]
+              },
+              "caller": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "host": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^(?:\\/(?![^/]*[0-9A-Fa-f]{8})[A-Za-z0-9._~-]{1,56}){1,2}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "ch": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 253,
+                    "pattern": "^[A-Za-z0-9.:-]{1,253}(?:\\/(?:24|48))?$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "size",
+              "b",
+              "mode",
+              "status",
+              "pri",
+              "caller",
+              "host"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 25,
+          "default": []
+        },
+        "filesOther": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                },
+                "b": {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/files/items/properties/b"
+                }
+              },
+              "required": [
+                "count",
+                "b"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "peers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Lan",
+                  "Group",
+                  "Internet",
+                  "CacheServer",
+                  "Unknown"
+                ]
+              },
+              "sameSubnet": {
+                "type": "boolean"
+              },
+              "peers": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sent": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+              },
+              "received": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+              }
+            },
+            "required": [
+              "type",
+              "sameSubnet",
+              "peers",
+              "sent",
+              "received"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 12,
+          "default": []
+        },
+        "topPeers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "h": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{16}$"
+              },
+              "type": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/peers/items/properties/type"
+              },
+              "sent": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+              },
+              "received": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+              }
+            },
+            "required": [
+              "h",
+              "type",
+              "sent",
+              "received"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 8,
+          "default": []
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/peers/items/properties/type"
+              },
+              "status": {
+                "type": "string"
+              },
+              "connected": {
+                "type": "boolean"
+              },
+              "n": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "type",
+              "status",
+              "connected",
+              "n"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 24,
+          "default": []
+        },
+        "connectivityChanged": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "checkId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string"
+              },
+              "protocol": {
+                "type": "string",
+                "enum": [
+                  "dns",
+                  "tcp",
+                  "http",
+                  "https",
+                  "udp",
+                  "local"
+                ]
+              },
+              "port": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "fail",
+                  "warn",
+                  "not-applicable",
+                  "not-collected"
+                ]
+              },
+              "latencyMs": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "detail": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "endpoint": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]{1,40}$"
+                  },
+                  "basis": {
+                    "type": "string",
+                    "enum": [
+                      "observed",
+                      "documented",
+                      "configured",
+                      "not-testable",
+                      "not-applicable"
+                    ]
+                  },
+                  "dns": {
+                    "type": "string",
+                    "enum": [
+                      "pass",
+                      "fail",
+                      "warn",
+                      "not-applicable",
+                      "not-collected"
+                    ]
+                  },
+                  "tcp": {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/connectivityChanged/items/properties/endpoint/properties/dns"
+                  },
+                  "tls": {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/connectivityChanged/items/properties/endpoint/properties/dns"
+                  },
+                  "http": {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/connectivityChanged/items/properties/endpoint/properties/dns"
+                  },
+                  "range": {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/connectivityChanged/items/properties/endpoint/properties/dns"
+                  },
+                  "dnsTypes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "A",
+                        "AAAA"
+                      ]
+                    },
+                    "maxItems": 2,
+                    "default": []
+                  },
+                  "addrs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[0-9A-Fa-f:.]{2,45}$"
+                    },
+                    "maxItems": 2,
+                    "default": []
+                  },
+                  "httpStatus": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 599
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "cert": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "issuer": {
+                            "type": "string",
+                            "enum": [
+                              "microsoft",
+                              "other-trusted",
+                              "untrusted"
+                            ]
+                          },
+                          "nameOk": {
+                            "type": "boolean"
+                          },
+                          "chainOk": {
+                            "type": "boolean"
+                          },
+                          "issuerCn": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 64
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null
+                          }
+                        },
+                        "required": [
+                          "issuer",
+                          "nameOk",
+                          "chainOk"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "proxy": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "netsh",
+                          "wininet",
+                          "pac",
+                          "wpad",
+                          "unresolved"
+                        ]
+                      },
+                      "used": {
+                        "type": "boolean"
+                      },
+                      "direct": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/definitions/DoctorDOTelemetryV1/properties/connectivityChanged/items/properties/endpoint/properties/dns"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "used"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "err": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9-]{1,40}$"
+                          },
+                          "message": {
+                            "type": "string",
+                            "maxLength": 200
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "at": {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+                  },
+                  "cached": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "basis",
+                  "dns",
+                  "tcp",
+                  "tls",
+                  "http",
+                  "range",
+                  "proxy",
+                  "at"
+                ],
+                "additionalProperties": false
+              },
+              "code": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]{1,48}$"
+              }
+            },
+            "required": [
+              "checkId",
+              "target",
+              "protocol",
+              "port",
+              "result",
+              "latencyMs",
+              "detail"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 64,
+          "default": []
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hresult": {
+                "type": "string",
+                "pattern": "^0x[0-9A-Fa-f]{8}$"
+              },
+              "component": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "n": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              },
+              "first": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+              },
+              "last": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 3
+              },
+              "sample": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "hresult",
+              "component",
+              "n",
+              "first",
+              "last",
+              "files",
+              "sample"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 32,
+          "default": []
+        },
+        "notCollected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "unsupported-os",
+                  "insufficient-rights",
+                  "cmdlet-missing",
+                  "timeout",
+                  "skipped-by-flag",
+                  "error"
+                ]
+              },
+              "detail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 64,
+          "default": []
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "cache",
+                      "cdn",
+                      "lan",
+                      "group",
+                      "internet",
+                      "peer"
+                    ]
+                  },
+                  "addr": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 260,
+                    "pattern": "^[A-Za-z0-9.:-]{1,253}(?:\\/(?:24|48))?$"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "default": 1
+                  },
+                  "rx": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "tx": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "conns": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "ok": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "fails": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0
+                  },
+                  "first": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "last": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/DoctorDOTelemetryV1/properties/collectedAt"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "via": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "status",
+                        "peers",
+                        "log",
+                        "tcp"
+                      ]
+                    },
+                    "maxItems": 4,
+                    "default": []
+                  },
+                  "origin": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "service",
+                          "policy",
+                          "dhcp"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  }
+                },
+                "required": [
+                  "role",
+                  "addr"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maxItems": 24,
+          "default": []
+        },
+        "diag": {
+          "type": "object",
+          "properties": {
+            "crash": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 99
+            },
+            "up": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 24
+            },
+            "flap": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 99
+              },
+              "propertyNames": {
+                "pattern": "^[a-z0-9:-]{1,40}$"
+              }
+            },
+            "gid": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            },
+            "gs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            }
+          },
+          "additionalProperties": false
+        },
+        "sources": {
+          "type": "object",
+          "properties": {
+            "mcc": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "h": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 253,
+                        "pattern": "^[A-Za-z0-9.:-]{1,253}(?:\\/(?:24|48))?$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "k": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "b": {
+                    "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "t": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                      },
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "h",
+                  "b",
+                  "n"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 5,
+              "default": []
+            },
+            "http": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DoctorDOTelemetryV1/properties/sources/properties/mcc/items"
+              },
+              "maxItems": 9,
+              "default": []
+            }
+          },
+          "additionalProperties": false
+        },
+        "month": {
+          "type": "object",
+          "properties": {
+            "monthStart": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "httpBytes": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+            },
+            "cacheBytes": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+            },
+            "lanBytes": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+            },
+            "internetBytes": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+            },
+            "groupBytes": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "uploadLanBytes": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+            },
+            "uploadInternetBytes": {
+              "$ref": "#/definitions/DoctorDOTelemetryV1/properties/perf/anyOf/0/properties/downloadHttpBytes"
+            }
+          },
+          "required": [
+            "monthStart",
+            "httpBytes",
+            "cacheBytes",
+            "lanBytes",
+            "internetBytes",
+            "groupBytes",
+            "uploadLanBytes",
+            "uploadInternetBytes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "collector",
+        "collectedAt",
+        "seq",
+        "inventoryHash",
+        "period",
+        "vitals"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

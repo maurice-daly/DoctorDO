@@ -1,0 +1,22 @@
+{
+  "cases": [
+    "first-run",
+    "snapshot",
+    "steady-state",
+    "one-flip",
+    "deltas",
+    "capped",
+    "few-files",
+    "huge-counters",
+    "empty",
+    "notcollected-cap",
+    "content-paths",
+    "endpoints",
+    "endpoint-health",
+    "sources",
+    "sources-busy",
+    "month",
+    "month-baseline"
+  ],
+  "generatedBy": "collector/tools/make-golden.ts"
+}

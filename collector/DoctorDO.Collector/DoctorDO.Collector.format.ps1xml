@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  How the results of New-DoctorDODeviceReport and Invoke-DoctorDOCollector show at the console (1.1.0): the few
+  properties a person reads, instead of every property. The objects are unchanged; Format-List * shows them all.
+  Every script block reads properties through PSObject.Properties, so a session in strict mode can show them.
+-->
+<Configuration>
+  <ViewDefinitions>
+    <View>
+      <Name>DoctorDO.DeviceReport</Name>
+      <ViewSelectedBy>
+        <TypeName>DoctorDO.DeviceReport</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <PropertyName>Path</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>PdfPath</Label>
+                <ScriptBlock>$_.PSObject.Properties['PdfPath'].Value</ScriptBlock>
+                <ItemSelectionCondition>
+                  <ScriptBlock>$p = $_.PSObject.Properties['PdfPath']; $null -ne $p -and $p.Value -and $p.Value -ne $_.PSObject.Properties['Path'].Value</ScriptBlock>
+                </ItemSelectionCondition>
+              </ListItem>
+              <ListItem>
+                <Label>JsonPath</Label>
+                <ScriptBlock>$_.PSObject.Properties['JsonPath'].Value</ScriptBlock>
+                <ItemSelectionCondition>
+                  <ScriptBlock>$p = $_.PSObject.Properties['JsonPath']; $null -ne $p -and $p.Value -and $p.Value -ne $_.PSObject.Properties['Path'].Value</ScriptBlock>
+                </ItemSelectionCondition>
+              </ListItem>
+              <ListItem>
+                <Label>Size</Label>
+                <ScriptBlock>'{0:N0} KB' -f ($_.PSObject.Properties['Bytes'].Value / 1KB)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>NotCollected</Label>
+                <ScriptBlock>'{0} facts; the report lists each, with why' -f $_.PSObject.Properties['NotCollected'].Value</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Duration</Label>
+                <ScriptBlock>'{0:N1} s' -f ($_.PSObject.Properties['DurationMs'].Value / 1000)</ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+    <View>
+      <Name>DoctorDO.CollectorResult</Name>
+      <ViewSelectedBy>
+        <TypeName>DoctorDO.CollectorResult</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Outcome</Label>
+                <ScriptBlock>'{0} (exit {1})' -f $_.PSObject.Properties['Outcome'].Value, $_.PSObject.Properties['ExitCode'].Value</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Message</Label>
+                <ScriptBlock>$_.PSObject.Properties['Message'].Value</ScriptBlock>
+                <ItemSelectionCondition>
+                  <ScriptBlock>$p = $_.PSObject.Properties['Message']; $null -ne $p -and $p.Value</ScriptBlock>
+                </ItemSelectionCondition>
+              </ListItem>
+              <ListItem>
+                <Label>BundlePath</Label>
+                <ScriptBlock>$_.PSObject.Properties['BundlePath'].Value</ScriptBlock>
+                <ItemSelectionCondition>
+                  <ScriptBlock>$null -ne $_.PSObject.Properties['BundlePath']</ScriptBlock>
+                </ItemSelectionCondition>
+              </ListItem>
+              <ListItem>
+                <Label>Reports</Label>
+                <ScriptBlock>@($_.PSObject.Properties['Reports'].Value | ForEach-Object { '{0}: {1}' -f $_.PSObject.Properties['Kind'].Value, $_.PSObject.Properties['Outcome'].Value }) -join ', '</ScriptBlock>
+                <ItemSelectionCondition>
+                  <ScriptBlock>$p = $_.PSObject.Properties['Reports']; $null -ne $p -and @($p.Value).Count -gt 0</ScriptBlock>
+                </ItemSelectionCondition>
+              </ListItem>
+              <ListItem>
+                <Label>NotCollected</Label>
+                <ScriptBlock>'{0} facts; .NotCollected lists each, with why' -f @($_.PSObject.Properties['NotCollected'].Value).Count</ScriptBlock>
+                <ItemSelectionCondition>
+                  <ScriptBlock>$null -ne $_.PSObject.Properties['NotCollected']</ScriptBlock>
+                </ItemSelectionCondition>
+              </ListItem>
+              <ListItem>
+                <Label>Duration</Label>
+                <ScriptBlock>'{0:N1} s' -f ($_.PSObject.Properties['DurationMs'].Value / 1000)</ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+  </ViewDefinitions>
+</Configuration>

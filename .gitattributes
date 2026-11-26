@@ -1,0 +1,3 @@
+# collector/.gitattributes keeps the module, the name module and the golden fixtures byte for byte. The offline device
+# report's page is generated and minified: GitHub collapses its diffs and leaves it out of the language statistics.
+collector/DoctorDO.Collector/Data/device-report.html -text -diff linguist-generated

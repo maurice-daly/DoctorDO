@@ -1,0 +1,360 @@
+TOPIC
+    about_DoctorDO.Collector
+
+SHORT DESCRIPTION
+    Diagnostics for Windows Delivery Optimization: a local device report or
+    support bundle, connectivity checks, and fleet reporting to your own
+    DoctorDO deployment. It changes no Delivery Optimization, firewall, proxy
+    or service setting (see WHAT IT NEVER CHANGES for what it does write).
+
+LONG DESCRIPTION
+    Delivery Optimization (DO) is the Windows service, DoSvc, that downloads
+    Windows updates, Microsoft 365 Apps, Microsoft Store and Intune Win32 apps,
+    sharing them between peers and Microsoft Connected Cache servers. Its state
+    is spread across cmdlets, logs, the registry and the network.
+
+    The DoctorDO.Collector module reads all of it on one device, works out what
+    is wrong, and either shows you on that device or reports it to a DoctorDO
+    deployment in your own Azure subscription for the whole estate.
+
+    It runs on Windows PowerShell 5.1 and PowerShell 7, needs no other module,
+    and makes no call to Microsoft Graph.
+
+COMMANDS
+    New-DoctorDODeviceReport
+        Writes one self-contained HTML page for this device: Delivery
+        Optimization health, network health, data flow, download sources and
+        configuration. No deployment needed; the page works offline.
+
+    Invoke-DoctorDOCollector
+        For a support bundle (zip, the default) or fleet reporting (-Fleet:
+        signed inventory and telemetry reports to your ingest service). For a
+        one-device report, start with New-DoctorDODeviceReport.
+        -WhatIfRedaction prints what is scrubbed.
+
+    Test-DOConnectivity
+        Checks the endpoints, ports, proxy, peers, Teredo and Connected Cache
+        that Delivery Optimization depends on: a summary by area and the
+        checks that failed or warned (-Detailed: every check). For TLS
+        inspection it judges the certificate's issuing chain, not the name the
+        certificate carries.
+
+    Get-DOConnectivityMatrix
+        The same checks as objects, for scripts.
+
+    Get-DOInventory
+        The full device inventory (InventoryV1) as a dictionary.
+
+    Get-DOTelemetry
+        One compact telemetry report (TelemetryV1), as fleet mode would send.
+
+    Send-DoctorDOReport
+        Sends one report to the ingest service, signed with the device key.
+
+    Get-Help <command> -Full shows the parameters, examples and exit codes.
+
+    At a console, New-DoctorDODeviceReport, Invoke-DoctorDOCollector and
+    Test-DOConnectivity say what they are doing: one line per part of the
+    collection as it finishes, a progress bar for the part under way, and at
+    the end the connectivity checks counted by area with each one that failed
+    or warned. This is information, not output: -InformationAction
+    SilentlyContinue hides it, and it is never written under SYSTEM, in an
+    Intune remediation or scheduled task, or when the output is redirected.
+    Colour is used only where the console supports it, and not when NO_COLOR
+    is set.
+
+REPORTING MODES
+    1. Device report (nothing leaves the device)
+           New-DoctorDODeviceReport
+           New-DoctorDODeviceReport -OutputPath C:\Temp -Anonymise -Format Html,Pdf
+           New-DoctorDODeviceReport -OutputPath C:\Temp -Format Both
+       -Format Json (or Both) also writes the report's data as a JSON file, and
+       -Format Pdf a PDF, printed by Microsoft Edge or Google Chrome. The report
+       opens by itself in an interactive session (never as SYSTEM, or from
+       Intune or a scheduled task); -NoOpen leaves it closed. -FileName gives
+       the files a fixed name (no folder, no extension) that each run replaces,
+       so a remediation or scheduled task keeps one report, not one per run.
+
+    2. Local support bundle (nothing leaves the device)
+           Invoke-DoctorDOCollector -OutputPath C:\Temp -Anonymise
+           Invoke-DoctorDOCollector -OutputPath C:\Temp -ReproduceIssue `
+               -AssumeVerboseLoggingOff -IncludeLog
+
+    3. Fleet reporting (to your own DoctorDO deployment, as SYSTEM)
+           Invoke-DoctorDOCollector -Fleet `
+               -IngestUri https://<your ingest host>/v1/ingest
+
+       A full inventory is sent on the first run, when the device changes,
+       daily for the first week and then every 7 days; a small telemetry
+       report on every run. Each request is
+       signed with the private key of the device's Microsoft Entra device
+       certificate (-DeviceAnchor entra-device, the default) or of an Intune
+       SCEP or PKCS certificate (-DeviceAnchor tenant-ca). No key, token or
+       password is deployed anywhere.
+
+    4. The parts, for scripts and troubleshooting
+           Test-DOConnectivity
+           Get-DOInventory -Anonymise | ConvertTo-Json -Depth 32
+           Get-DOTelemetry -Anonymise | ConvertTo-Json -Depth 32
+
+WHAT IT READS
+    - Device identity and management: dsregcmd /status (join type, Microsoft
+      Entra device and tenant IDs), the MDM enrolment, the Intune device ID,
+      the Configuration Manager client.
+    - Hardware and operating system: CIM classes (processor, memory, disks,
+      TPM, battery) and the Windows version keys in the registry.
+    - Delivery Optimization: Get-DOConfig, Get-DeliveryOptimizationStatus,
+      Get-DeliveryOptimizationPerfSnap, the Delivery Optimization log, the
+      DoSvc service, and the DO policy, MDM and settings registry stores
+      (enumerated, so a mistyped or unknown value is seen too).
+    - Network: adapters, VPN, proxy (WinINET, WinHTTP and the proxy
+      auto-config scripts in force), DHCP options 234 and 235, network cost,
+      the Windows Firewall rules and profiles that affect Delivery Optimization.
+    - System event log: DoSvc crashes and the time the device is powered on.
+    - Autopilot provisioning, on a device that showed the Enrollment Status
+      Page: its tracking under HKLM\SOFTWARE\Microsoft\Windows\Autopilot\
+      EnrollmentStatusTracking (for up to 30 Win32 apps the Intune app ID,
+      state, reboot flag and status times) and, once soon after
+      provisioning, a summary of Delivery Optimization's jobs of that time.
+
+WHAT IT NEVER CHANGES
+    The collector never changes Delivery Optimization configuration or
+    policy, the firewall, the proxy or any service setting, and never stops,
+    starts or reconfigures a service itself.
+
+    What it does write, start or stop is named and bounded:
+    - The Intune remediation (Remediate-DoctorDO.ps1) installs or updates
+      the module for all users (%ProgramFiles%\WindowsPowerShell\Modules),
+      installs the NuGet provider if it is missing, records when it last
+      looked for a newer version (LastModuleUpdateCheck under
+      HKLM\SOFTWARE\DoctorDO), and writes its log, DoctorDO-Remediation.log,
+      in the Intune Management Extension's Logs folder.
+    - Fleet runs keep their own state folder, %ProgramData%\DoctorDO
+      (state.json and two caches; SYSTEM and Administrators only), and write
+      two values, LastSuccessfulCollection and LastReportKind, under
+      HKLM\SOFTWARE\DoctorDO, which the Intune detection script reads.
+    - The local bundle reads the log with Get-DeliveryOptimizationLog -Flush,
+      which Microsoft documents as stopping DoSvc before it reads the logs;
+      -NoFlush avoids it, and a bundle made with -ReproduceIssue records in
+      its manifest whether DoSvc was stopped (dosvcStopped). Fleet runs, the
+      device report and the Get-DO* and Test-DOConnectivity commands never
+      flush.
+    - -ReproduceIssue (local bundle only) turns on verbose logging for the
+      reproduction and always turns it off again, even after an error, Ctrl+C
+      or a timeout. If that fails the run exits 4 with the command to run.
+    - The connectivity checks make outbound connections (see NETWORK
+      ACTIVITY); -SkipConnectivityChecks turns them off.
+    - The device report and the bundle write the one file you asked for.
+
+NETWORK ACTIVITY
+    Reports go only to the ingest endpoint you give with -IngestUri, which is
+    your own DoctorDO deployment; no report or device data goes to the
+    DoctorDO project. Unless you pass -SkipConnectivityChecks, the checks
+    contact:
+    - the Microsoft endpoints Delivery Optimization uses, listed in
+      Data\endpoints.json in the module folder (DNS, TCP, a TLS handshake, one
+      HEAD and one 1-byte range request for a file the device downloaded);
+    - the Delivery Optimization geo service (one request, as DO itself makes);
+    - the Connected Cache server the device is configured with, peers the
+      device already knows (TCP 7680) and the proxy auto-config scripts in
+      force (downloaded and read on the device only).
+    DHCP options 234 and 235 are read, when DO itself would read them,
+    through the Windows DHCP client (DhcpRequestParams): when it has no
+    cached answer, the DHCP client sends a DHCP-INFORM message to the DHCP
+    server, which your network team may see. With -PublicIpProbeUri the
+    collector also asks the service you name for the device's public IP
+    address, when Delivery Optimization's geo answer gives none.
+
+    The Intune remediation also contacts, to install and update the module,
+    the PowerShell repository it installs from (PowerShell Gallery by
+    default, or the one set with -Repository): under the default
+    -UpdatePolicy LatestVerified it looks there for a newer version at most
+    once a day (-UpdateCheckHours), and it installs from there on every run
+    while no usable version is installed. It also contacts the location the
+    NuGet provider is downloaded from when it is missing. When it verifies
+    a version other than the one stamped into the script, it downloads
+    collector-manifest.json from the project's GitHub release. These
+    requests carry no report data. -UpdatePolicy Pinned with your own
+    repository avoids the GitHub download and the PowerShell Gallery.
+
+PRIVACY
+    - Log lines, error samples and firewall rule names and programs pass
+      through a scrub that replaces account forms it recognises: the folder
+      after \Users\ or \Documents and Settings\ (any drive or prefix, either
+      slash, a name with spaces when a path separator follows it),
+      everything after the server of a UNC path, the account in AzureAD\,
+      MicrosoftAccount\ and upper-case DOMAIN\account forms, user SIDs, and
+      e-mail addresses and UPNs; URL paths are cut to two segments and query
+      strings removed. It works by pattern, so a form it does not recognise
+      can get through (a lower-case domain, the part of an account name
+      after a space, a name written in free text). Nothing reads a user
+      name: the proxy check reads each signed-in user's proxy settings and
+      keeps only how many it read, never a SID or a name. Entra group
+      membership, compliance state, apps, the primary user, credentials and
+      tokens are not collected.
+    - Peer addresses in the peer and connection lists are hashed with the
+      tenant's salt. In the endpoint list an internet peer is always reduced
+      to its /24 or /48 network, and LAN, group and untyped peers (one seen
+      only in the log or on TCP 7680) are too under -Anonymise; without it
+      they appear as addresses. Log text keeps addresses unless -Anonymise,
+      which replaces IPv4 and IPv6 addresses with a hash.
+    - -Anonymise removes the host name and hashes or reduces the values that
+      identify the device or the network (subnet, gateway, peer group ID,
+      adapter name, PAC host, internal content hosts). The peer group ID,
+      DHCP option 234 and internal content hosts are hashed with the
+      tenant's salt, so devices in one tenant compare equal; as with the
+      peer hashes, a guessed value can be tested by anyone who knows the
+      tenant ID.
+      It is on by default in fleet mode and off for the local bundle and the
+      device report.
+    - The fleet inventory carries the Entra device, tenant and Intune device
+      IDs, and the Entra device ID also reaches your ingest service in the
+      certificate that signs every request, whatever -Anonymise says.
+    - An anonymised device report also drops the Entra, tenant and Intune IDs,
+      the ConfigMgr site code and the AD site, and uses a salt made for that
+      report, so it cannot be matched to your fleet data.
+    - Invoke-DoctorDOCollector -WhatIfRedaction prints the full redaction
+      profile (Data\redaction-profile.json) without collecting anything.
+
+REQUIREMENTS
+    - Windows 10 2004 or Windows 11 or later for the full set of facts. Older
+      builds report what they cannot read; nothing is invented.
+    - Windows PowerShell 5.1 or PowerShell 7.
+    - Run elevated or as SYSTEM. The device report and the read-only commands
+      also run unelevated and list what they could not read.
+    - Fleet mode: SYSTEM; for entra-device, a Microsoft Entra joined or hybrid
+      joined device enrolled in Intune; a DoctorDO deployment.
+
+A TYPICAL INTUNE DEPLOYMENT
+    1. The remediation installs the module itself. Remediate-DoctorDO.ps1
+       checks on every run whether DoctorDO.Collector is installed for all
+       users (%ProgramFiles%\WindowsPowerShell\Modules, the folder Windows
+       PowerShell 5.1 and PowerShell 7 both search) and installs or updates
+       it from a PowerShell repository (default PSGallery, or your own, set
+       with -Repository). It enforces TLS 1.2, installs the NuGet provider
+       if needed, and uses Install-Module -Scope AllUsers without changing
+       the repository's trust setting. Nothing to package or assign first.
+
+       The module is not signed, so before every Import-Module the script
+       checks the copy: only SYSTEM, Administrators and TrustedInstaller can
+       write to its folder; it holds exactly the files of the release; the
+       SHA-256 of each equals the release's list (collector-manifest.json on
+       the GitHub release, or the list stamped into the script with
+       -UpdatePolicy Pinned); the GUID and author are the expected ones.
+       A copy that fails is removed (if just installed) and the previous
+       version is used. The module is imported by the path of its .psd1.
+       (PowerShell 7's Install-PSResource -Scope AllUsers installs to
+       %ProgramFiles%\PowerShell\Modules, which Windows PowerShell 5.1 does
+       not search.)
+
+       The script writes a log you can open with CMTrace or OneTrace:
+           %ProgramData%\Microsoft\IntuneManagementExtension\Logs\DoctorDO-Remediation.log
+
+    2. Create a remediation (Devices > Scripts and remediations) with
+       DoctorDO's Intune scripts, Detect-DoctorDO.ps1 and
+       Remediate-DoctorDO.ps1. Set the ingest URL at the top of
+       Remediate-DoctorDO.ps1 first.
+           Run this script using the logged-on credentials:  No
+           Run script in 64-bit PowerShell:                  Yes
+           Enforce script signature check:                   your policy
+           Schedule:                                         Daily
+       Assign it to a device group.
+
+    3. The detection script exits 1 when there has been no accepted report
+       for 22 hours (-MaxAgeHours; keep it shorter than the schedule's
+       interval, 160 for weekly); the remediation then runs
+           Invoke-DoctorDOCollector -Fleet -IngestUri <uri> -DeviceAnchor <a>
+       after a random delay of up to 10 minutes, and exits with its code.
+
+    The module is not signed. If an AllSigned execution policy set
+    by Group Policy, or App Control for Business (WDAC) or AppLocker script
+    rules, require signed scripts, re-sign the module and the scripts with a
+    code-signing certificate your devices trust before packaging; the
+    licence allows it.
+
+EXIT CODES
+    Invoke-DoctorDOCollector returns ExitCode and sets $LASTEXITCODE:
+      0  success (or backing off after HTTP 429, 401 or 503; nothing sent)
+      1  not elevated
+      2  not running on Windows
+      3  collection failed (or the remediation script is not configured)
+      4  verbose logging could not be restored (local bundle only)
+      5  fleet upload failed
+      6  the device cannot identify itself (see TROUBLESHOOTING)
+      7  the state folder %ProgramData%\DoctorDO is not safe to use
+    Remediate-DoctorDO.ps1 adds codes for the module install:
+      8  the module is missing or too old and could not be installed
+      9  the module failed verification and no earlier version is verified
+     10  the verified module could not be imported
+     11  no version could be verified (the release manifest was unreachable)
+
+TROUBLESHOOTING
+    See every step, its timing and its result as well (no host, user or
+    address is printed, so the transcript can be shared):
+        Invoke-DoctorDOCollector -Verbose
+        New-DoctorDODeviceReport -Verbose
+
+    Exit 1, NotElevated
+        Run from an elevated prompt, or as SYSTEM. In Intune, set "Run this
+        script using the logged-on credentials" to No.
+
+    Exit 3, CollectionFailed
+        The result's Message names what could not be read. With
+        -ReproduceIssue, add -AssumeVerboseLoggingOff. From the remediation:
+        check the ingest URL at the top of Remediate-DoctorDO.ps1, and that
+        the module is in %ProgramFiles%\WindowsPowerShell\Modules (Import-Module
+        fails otherwise).
+
+    Exit 5, upload failed
+        Check the network path to the ingest host. The result's Reports show
+        each HTTP status. A 401 from a device that is otherwise fine usually
+        means the device is disabled in Entra, its clock is more than five
+        minutes out, or the deployment uses the other device anchor. The next
+        run sends the same counters again; nothing is lost.
+
+    Exit 6, the device cannot identify itself
+        Run as SYSTEM (for example psexec -s) and check:
+            dsregcmd /status | Select-String 'AzureAdJoined|DeviceId|Thumbprint|DeviceAuthStatus'
+        entra-device needs AzureAdJoined : YES; Entra registered (BYOD) and
+        domain-only devices cannot report. tenant-ca needs the Intune SCEP or
+        PKCS certificate profile on the device.
+
+    Exit 7, StateFolderUntrusted
+        %ProgramData%\DoctorDO was probably created by a standard user. Delete
+        it as an administrator; the next run creates it for SYSTEM and
+        Administrators only.
+
+    A check shows not-collected
+        It could not run: no elevation, a missing cmdlet on an older build,
+        -SkipConnectivityChecks, or a timeout. The detail says which. A check
+        that did not run is never reported as a pass.
+
+    The device report page is missing or damaged
+        Reinstall the module (New-DoctorDODeviceReport checks Data\
+        device-report.html before it uses it).
+
+LICENCE
+    DoctorDO is an independent community project, free to use, and in
+    preview. DoctorDO.Collector is source-available, not open source. It is
+    licensed under the PolyForm Shield License 1.0.0: you may use, change and
+    share it free of charge for any purpose, including in your organisation,
+    and re-sign it with your own certificate. Consultants may run it for a
+    client and charge for their time. You may not use it to provide any
+    product that competes with it, or with a product the licensor provides
+    using it such as DoctorDO, even a free one. It comes as is, with no
+    warranty and no support. See the LICENSE file in the module folder, or
+    https://www.doctor-do.com/licence/. Bundled third-party components keep
+    their own licences (THIRD-PARTY-NOTICES.txt). DoctorDO's Intune scripts
+    (Detect-DoctorDO.ps1, Remediate-DoctorDO.ps1 and
+    Install-DoctorDOCollector.ps1) are MIT licensed.
+
+SEE ALSO
+    Get-Help Invoke-DoctorDOCollector -Full
+    Get-Help New-DoctorDODeviceReport -Full
+    Get-Help Test-DOConnectivity -Full
+    https://www.doctor-do.com/get-started/
+    https://www.doctor-do.com/data/            what is collected and sent
+    https://learn.microsoft.com/windows/deployment/do/waas-delivery-optimization
+
+KEYWORDS
+    DeliveryOptimization, DoSvc, ConnectedCache, Intune, Diagnostics

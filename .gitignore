@@ -1,0 +1,18 @@
+# Output of collector/tools/package-collector.ps1 and of local test runs
+collector/dist/
+*.nupkg
+TestResults/
+testResults.xml
+
+# Reports and bundles the collector writes: they identify a device unless -Anonymise was used
+DoctorDO-*.html
+DoctorDO-*.json
+DoctorDO-*.pdf
+DoctorDO-*.zip
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

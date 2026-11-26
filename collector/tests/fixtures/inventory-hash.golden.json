@@ -1,0 +1,153 @@
+{
+  "input": {
+    "firewallRules": [
+      {
+        "profiles": [
+          "Domain",
+          "Private",
+          "Public"
+        ],
+        "service": "dosvc",
+        "program": "%SystemRoot%\\system32\\svchost.exe",
+        "localPort": "7680",
+        "protocol": "TCP",
+        "enabled": true,
+        "action": "Allow",
+        "direction": "Inbound",
+        "displayName": "Delivery Optimization (TCP-In)"
+      }
+    ],
+    "connectivity": [
+      {
+        "detail": "Resolved",
+        "latencyMs": 12.5,
+        "result": "pass",
+        "port": null,
+        "protocol": "dns",
+        "target": "geo.prod.do.dsp.mp.microsoft.com",
+        "checkId": "do-cloud-dns"
+      }
+    ],
+    "os": {
+      "installDate": "2026-03-14",
+      "displayVersion": "24H2",
+      "edition": "Windows 11 Enterprise",
+      "ubr": 4061,
+      "build": "10.0.26100"
+    },
+    "hardware": {
+      "disks": [
+        {
+          "sizeGB": 476,
+          "kind": "NVMe"
+        }
+      ],
+      "tpm": {
+        "version": "2.0",
+        "present": true
+      },
+      "cpu": {
+        "logicalCores": 12,
+        "name": "Contoso Core 7"
+      },
+      "biosVersion": "1.8.2",
+      "serialHash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "model": "Contoso Laptop 14",
+      "manufacturer": "Contoso Devices"
+    },
+    "management": {
+      "updateSource": "wufb",
+      "autopilot": null,
+      "configMgr": {
+        "boundaryGroups": [],
+        "siteCode": null,
+        "client": false
+      },
+      "mdm": {
+        "serverHost": "manage.microsoft.com",
+        "intuneDeviceId": "c0a8e1d2-77b4-4f09-b3a1-5e2d9c4f6a88",
+        "enrolmentType": "6",
+        "provider": "intune",
+        "enrolled": true
+      },
+      "tenantId": "9b1e4d77-2c0a-4e55-8f1a-6a3c5d2e7b10",
+      "entraDeviceId": "3f2c1a9e-5b7d-4c2e-9a41-0d6e8f7b1c20",
+      "joinType": "hybrid"
+    },
+    "device": {
+      "entraJoined": true,
+      "domainJoined": true,
+      "isConfigMgrClient": false,
+      "chassis": "Laptop",
+      "cacheDriveGB": 476,
+      "systemDiskGB": 476.94,
+      "ramGB": 15.9,
+      "isVirtual": false,
+      "isSupportedEdition": true,
+      "osEdition": "Windows 11 Enterprise",
+      "osBuild": "10.0.26100.4061",
+      "hostname": "café \"quoted\" \\ back\tslash\n\u0001   😀",
+      "deviceId": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "kind": "inventory",
+    "notCollected": [
+      {
+        "reason": "timeout",
+        "field": "volatile"
+      }
+    ],
+    "doConfig": {
+      "stores": {
+        "policy": {
+          "confidence": "documented",
+          "values": [
+            {
+              "data": "2",
+              "type": "REG_DWORD",
+              "name": "DODownloadMode"
+            }
+          ],
+          "present": true,
+          "key": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization"
+        }
+      },
+      "effective": {
+        "DODownloadMode": {
+          "provider": "Mdm",
+          "value": 2
+        }
+      }
+    },
+    "network": {
+      "proxy": {
+        "bypassLocal": true,
+        "pacUrlHost": null,
+        "autoDetect": false,
+        "netshConfigured": false,
+        "wininetScope": "none",
+        "configured": false
+      },
+      "localPolicyMergeEnabled": true,
+      "dhcpOption235": "10.20.9.15",
+      "dhcpOption234": null,
+      "adSite": "MAN-01",
+      "publicEgressHash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "defaultGateway": "10.20.4.1",
+      "localSubnet": "10.20.4.0/22",
+      "isMetered": false,
+      "matchesDefaultVpnKeywords": false,
+      "vpnAdapterNames": [],
+      "isVpnActive": false,
+      "adapterType": "Ethernet"
+    },
+    "anonymised": true,
+    "collectedAt": "2026-09-06T14:22:10Z",
+    "collector": {
+      "version": "0.1.0",
+      "name": "DoctorDO.Collector"
+    },
+    "schemaVersion": 1
+  },
+  "canonical": "{\"anonymised\":true,\"collector\":{\"name\":\"DoctorDO.Collector\",\"version\":\"0.1.0\"},\"connectivity\":[{\"checkId\":\"do-cloud-dns\",\"detail\":\"Resolved\",\"latencyMs\":12.5,\"port\":null,\"protocol\":\"dns\",\"result\":\"pass\",\"target\":\"geo.prod.do.dsp.mp.microsoft.com\"}],\"device\":{\"cacheDriveGB\":476,\"chassis\":\"Laptop\",\"deviceId\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"domainJoined\":true,\"entraJoined\":true,\"hostname\":\"café \\\"quoted\\\" \\\\ back\\tslash\\n\\u0001   😀\",\"isConfigMgrClient\":false,\"isSupportedEdition\":true,\"isVirtual\":false,\"osBuild\":\"10.0.26100.4061\",\"osEdition\":\"Windows 11 Enterprise\",\"ramGB\":15.9,\"systemDiskGB\":476.94},\"doConfig\":{\"effective\":{\"DODownloadMode\":{\"provider\":\"Mdm\",\"value\":2}},\"stores\":{\"policy\":{\"confidence\":\"documented\",\"key\":\"HKLM\\\\SOFTWARE\\\\Policies\\\\Microsoft\\\\Windows\\\\DeliveryOptimization\",\"present\":true,\"values\":[{\"data\":\"2\",\"name\":\"DODownloadMode\",\"type\":\"REG_DWORD\"}]}}},\"firewallRules\":[{\"action\":\"Allow\",\"direction\":\"Inbound\",\"displayName\":\"Delivery Optimization (TCP-In)\",\"enabled\":true,\"localPort\":\"7680\",\"profiles\":[\"Domain\",\"Private\",\"Public\"],\"program\":\"%SystemRoot%\\\\system32\\\\svchost.exe\",\"protocol\":\"TCP\",\"service\":\"dosvc\"}],\"hardware\":{\"biosVersion\":\"1.8.2\",\"cpu\":{\"logicalCores\":12,\"name\":\"Contoso Core 7\"},\"disks\":[{\"kind\":\"NVMe\",\"sizeGB\":476}],\"manufacturer\":\"Contoso Devices\",\"model\":\"Contoso Laptop 14\",\"serialHash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"tpm\":{\"present\":true,\"version\":\"2.0\"}},\"kind\":\"inventory\",\"management\":{\"autopilot\":null,\"configMgr\":{\"boundaryGroups\":[],\"client\":false,\"siteCode\":null},\"entraDeviceId\":\"3f2c1a9e-5b7d-4c2e-9a41-0d6e8f7b1c20\",\"joinType\":\"hybrid\",\"mdm\":{\"enrolled\":true,\"enrolmentType\":\"6\",\"intuneDeviceId\":\"c0a8e1d2-77b4-4f09-b3a1-5e2d9c4f6a88\",\"provider\":\"intune\",\"serverHost\":\"manage.microsoft.com\"},\"tenantId\":\"9b1e4d77-2c0a-4e55-8f1a-6a3c5d2e7b10\",\"updateSource\":\"wufb\"},\"network\":{\"adSite\":\"MAN-01\",\"adapterType\":\"Ethernet\",\"defaultGateway\":\"10.20.4.1\",\"dhcpOption234\":null,\"dhcpOption235\":\"10.20.9.15\",\"isMetered\":false,\"isVpnActive\":false,\"localPolicyMergeEnabled\":true,\"localSubnet\":\"10.20.4.0/22\",\"matchesDefaultVpnKeywords\":false,\"proxy\":{\"autoDetect\":false,\"bypassLocal\":true,\"configured\":false,\"netshConfigured\":false,\"pacUrlHost\":null,\"wininetScope\":\"none\"},\"publicEgressHash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"vpnAdapterNames\":[]},\"os\":{\"build\":\"10.0.26100\",\"displayVersion\":\"24H2\",\"edition\":\"Windows 11 Enterprise\",\"installDate\":\"2026-03-14\",\"ubr\":4061},\"schemaVersion\":1}",
+  "hash": "sha256:ceaf99d2103018813ee877f5415cb51ae2b44a968eb18006f08f5f33a3842806"
+}

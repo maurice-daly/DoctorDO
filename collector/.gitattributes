@@ -1,0 +1,9 @@
+# The golden fixtures are compared byte for byte (canonical JSON with LF line ends, written by tools/make-golden.ts).
+# Keep LF in Windows checkouts, where core.autocrlf would otherwise turn them into CRLF and fail the comparison.
+tests/fixtures/** text eol=lf
+
+# The Intune remediation checks the SHA-256 of every module file against the release (collector-manifest.json), so the
+# module is kept byte for byte on every checkout: no line-ending conversion (core.autocrlf) may change a hash.
+DoctorDO.Collector/** -text
+# The DoctorDO name module ships the collector's LICENSE, and a test compares the two byte for byte.
+DoctorDO/** -text

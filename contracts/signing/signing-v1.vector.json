@@ -1,0 +1,89 @@
+{
+  "description": "Golden vector for the DoctorDO signed-request protocol v1 (ADR-0029). Verifiers must VERIFY the signatures; ECDSA signatures are randomised, so implementations must not compare their own signature bytes for ECDSA. RSA PKCS#1 v1.5 is deterministic: an implementation signing the RSA canonical string with the RSA key must produce exactly the signature given. The keys are throwaway test keys.",
+  "protocol": {
+    "canonicalString": "Lines joined by a single LF, no trailing newline: \"DOCTORDO-SIG-1\", method, path, host, x-doctordo-kind, x-doctordo-collected-at, x-doctordo-signed-at, x-doctordo-nonce, base64(SHA-256(body bytes as sent)). UTF-8. Header values are used exactly as sent.",
+    "host": "The verifier uses its configured public ingest host (lower case, no port), never the request Host header. The collector uses the host of its configured ingest URI.",
+    "signedAt": "RFC 3339 UTC with Z and whole seconds. Accepted within plus or minus 300 seconds of the verifier clock.",
+    "nonce": "16 random bytes, base64url without padding (22 characters). Not reused within the acceptance window.",
+    "deviceCert": "Leaf certificate DER, standard base64 with padding.",
+    "signature": "Standard base64 with padding. The algorithm follows the certificate key type: RSA uses RSASSA-PKCS1-v1_5 with SHA-256; EC P-256 uses ECDSA with SHA-256 in IEEE P1363 (r||s) form, which is what .NET ECDsa.SignData returns."
+  },
+  "cases": [
+    {
+      "name": "rsa-entra-device-key",
+      "algorithm": "rsa-pkcs1-sha256",
+      "privateKeyPkcs8Pem": "-----BEGIN PRIVATE KEY-----\r\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDS1n3v31dm1lLT\r\nJeFGWUH/73vUSyAp1UquBfgD4v0hXkTecgYbS1zej4u1SGGygOLRS5wL4VBMIFJQ\r\nnSiYqZpSfzB4f3mZuL0y8WMxVliJm5umTxugyOzPKPepOawYmcQLXUuykEeqy1ut\r\n83OR+8G6MbAq6Fr5Hg7KOqX133dyhrmKP/NnPVI9VfskamN6EBj62AWkOsrVwht5\r\njo/FlOTJxZ0YN0CeY4bS40MlOttrlZs8T2skvruuZYdNirSNE8iGEJsOvR9EM530\r\naVe7C1Pbs5OIwC0GoDPRZwFXK52UnoCu4q0BeuY0kPnfYLm44fMTN7hlKH9PFozT\r\nPpbHuLYvAgMBAAECggEAUoSkkaeGG7eyfvWKb/ArRrJCctpcYkMakXXAljTXAaJV\r\nrgJOpYwfcvQXqAIGSsjq/SNslbG/ravQy8BWzTlELxmcrOyneSS22CNlwT+cM291\r\nweegVpONK59LHy51TsOP2SrQn7icdBpXbYOlLfOs5OThoEmEoY/EFh5SKiMmKuod\r\nwhERN/cQvXbYCjxacVwVIt9rGfrKnD4p11ktDmCC0n++0KsL6nrcCojQr+y6koiH\r\nIV5bXWGpOsD0E56xOtF4SMyGRfC+2UILU22Ycsh7LGWTwLcn72nOQD1OHJsi6QlG\r\nFSjVhzRzt6vv7zMzDmuXUrI0BrU0DoFUOiiMsGWAYQKBgQD1E5ScCzHG3kGtffi5\r\nG6zJA8g2NOKb/Z4nktt+pS/bq6jFsNxFxQJ31zLp2YikjH8DRwv//+9i6XzOaAAC\r\nKdi30McfNJ4Jaj9cL351HrC1+rgGkTf1wFKK8deOu7LHzs39e1/4GmGJ9aEUqbAx\r\neOJd6RzK1AUjrHc8MpLvK7UYdwKBgQDcPDw0mN0MVY/jDC5uFtzFKqfLMHLI/i2s\r\nRBY/x6b+qv3ooD7jjzI+p/a9NpAyIMn3c9x45kglC8nvH//6sPjNvHwiV5ss05Ph\r\nGnD27WLrwgkaSbj0R5+VQEu8hhns3aqD+bG/djMkCM5nmoqQVocj9nNocBciWZxu\r\n6eE4vIx2CQKBgQDduDA7mFkZPNyYdB5AgcwpM/W/LMtTKvkZfmB7zEBm8X9IEwDF\r\nUj4wY43ZSQe5Lq5+LZmqqkZN60URi79uNaOucQCkt7q+c9QMt58loHVovgIdVuYU\r\nvEExGSjWJfPRlsR/rk2drWhPItzvT7FqoJ3TLmHxEi3wH0jkOjD6lkVJcwKBgQC7\r\nPttRPMZzvitftvOi1f1OBT40GzT8fl8Gn7zq7SymSWsnZVcS0qS9cMDvjnx6ojYV\r\nFYTVpbShCqzdii9xTRW8lgxUhneAXULVmE2DI8F/ALIMj7GYv2yG0OuTldBk+vIG\r\n0zy0tCI2+OXEYDh/D5JGmTr2CJcitV2zT1YVjvk9QQKBgEV80y/bZcfdF/xAj2VO\r\nQF281ypRGN1jMa33y6TUYQB7JkIB2WZy5yzfsn+HFOoPJnLr9zLj7Xr789YRWfoL\r\njx2+bFzHyOYCaWMG5+QeP9L+kWhS8IEqan1+xuW1D+NFSgT6Vn6PMaaD8n3Bi9zU\r\nbc0zaEkYp2eaqDaq6NJJxi2d\r\n-----END PRIVATE KEY-----\r\n",
+      "certificatePem": "-----BEGIN CERTIFICATE-----\r\nMIIDmDCCAoCgAwIBAgIUQvTuu8EMUoj7JYRhO8yUJ+P4b0kwDQYJKoZIhvcNAQEL\r\nBQAwfjEfMB0GA1UEAwwWTVMtT3JnYW5pemF0aW9uLUFjY2VzczEtMCsGA1UECwwk\r\nODJkYmFjYTQtM2U4MS00NmNhLTljNzMtMDk1MGMxZWFjYTk3MRcwFQYKCZImiZPy\r\nLGQBGRYHd2luZG93czETMBEGCgmSJomT8ixkARkWA25ldDAeFw0yNjEwMTIxODE3\r\nNDlaFw0zNjEwMDkxODE3NDlaMC8xLTArBgNVBAMMJDNmMGM2YTJlLTVkMWItNGI4\r\nZS05YTdjLTJlNGY2YjhkMGExMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC\r\nggEBANLWfe/fV2bWUtMl4UZZQf/ve9RLICnVSq4F+APi/SFeRN5yBhtLXN6Pi7VI\r\nYbKA4tFLnAvhUEwgUlCdKJipmlJ/MHh/eZm4vTLxYzFWWImbm6ZPG6DI7M8o96k5\r\nrBiZxAtdS7KQR6rLW63zc5H7wboxsCroWvkeDso6pfXfd3KGuYo/82c9Uj1V+yRq\r\nY3oQGPrYBaQ6ytXCG3mOj8WU5MnFnRg3QJ5jhtLjQyU622uVmzxPayS+u65lh02K\r\ntI0TyIYQmw69H0QznfRpV7sLU9uzk4jALQagM9FnAVcrnZSegK7irQF65jSQ+d9g\r\nubjh8xM3uGUof08WjNM+lse4ti8CAwEAAaNdMFswCQYDVR0TBAIwADAOBgNVHQ8B\r\nAf8EBAMCB4AwHQYDVR0OBBYEFJqMMOeVKu95SwtkKuu0Ks3QbBNuMB8GA1UdIwQY\r\nMBaAFJZAb2pfX+X1pbN4BSL4EWXXhp+ZMA0GCSqGSIb3DQEBCwUAA4IBAQA8FL3P\r\nJR5cRXTomRKVCY1/M/vit7lhlPN8X0QtoheMcp/kGs3JmBKgdh2KDfHaP/+3GtpX\r\n6cwlmntA4hzSCnlcbOHkSz2jfgYkwycr6cPHeNcK1sQdX4fTLlP6Gye42SAU3PSN\r\nRObTO8zwIkOhh6AqEjiD3uf16+BoUWCNf8SteiG+6Egw3p49GDMsz0Vrec/RjUi+\r\npq8YuGOTppPT4nc5uwVwTvOgpEi3HVMJEfsWj+TwOi76kc+3MUcN2zrFszbGtBiB\r\ndtv3EIjMWtv3KKemPn3iqoYkCG474tuLj257yjAnx3Wmp37/K4WnsAfMZQrBMN3h\r\nPMdveJtLCkn1Ck2Y\r\n-----END CERTIFICATE-----\r\n",
+      "certificateSha1Thumbprint": "A0B4EC9277B0B9DD266E29FD11048DEFA51AA655",
+      "request": {
+        "method": "POST",
+        "path": "/v1/ingest",
+        "host": "func-doctordo-ingest-dev-abcde.azurewebsites.net",
+        "bodyBase64": "H4sIAAAAAAAAA6tWyk7NyVeyUlAqLilKTE5VqgUAc0n1jRMAAAA=",
+        "headers": {
+          "x-doctordo-kind": "telemetry",
+          "x-doctordo-collected-at": "2026-10-12T14:00:00Z",
+          "x-doctordo-signed-at": "2026-10-12T14:03:22Z",
+          "x-doctordo-nonce": "q8h3kZb1R0m5x2Tn7Yw4Vg",
+          "x-doctordo-device-cert": "MIIDmDCCAoCgAwIBAgIUQvTuu8EMUoj7JYRhO8yUJ+P4b0kwDQYJKoZIhvcNAQELBQAwfjEfMB0GA1UEAwwWTVMtT3JnYW5pemF0aW9uLUFjY2VzczEtMCsGA1UECwwkODJkYmFjYTQtM2U4MS00NmNhLTljNzMtMDk1MGMxZWFjYTk3MRcwFQYKCZImiZPyLGQBGRYHd2luZG93czETMBEGCgmSJomT8ixkARkWA25ldDAeFw0yNjEwMTIxODE3NDlaFw0zNjEwMDkxODE3NDlaMC8xLTArBgNVBAMMJDNmMGM2YTJlLTVkMWItNGI4ZS05YTdjLTJlNGY2YjhkMGExMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANLWfe/fV2bWUtMl4UZZQf/ve9RLICnVSq4F+APi/SFeRN5yBhtLXN6Pi7VIYbKA4tFLnAvhUEwgUlCdKJipmlJ/MHh/eZm4vTLxYzFWWImbm6ZPG6DI7M8o96k5rBiZxAtdS7KQR6rLW63zc5H7wboxsCroWvkeDso6pfXfd3KGuYo/82c9Uj1V+yRqY3oQGPrYBaQ6ytXCG3mOj8WU5MnFnRg3QJ5jhtLjQyU622uVmzxPayS+u65lh02KtI0TyIYQmw69H0QznfRpV7sLU9uzk4jALQagM9FnAVcrnZSegK7irQF65jSQ+d9gubjh8xM3uGUof08WjNM+lse4ti8CAwEAAaNdMFswCQYDVR0TBAIwADAOBgNVHQ8BAf8EBAMCB4AwHQYDVR0OBBYEFJqMMOeVKu95SwtkKuu0Ks3QbBNuMB8GA1UdIwQYMBaAFJZAb2pfX+X1pbN4BSL4EWXXhp+ZMA0GCSqGSIb3DQEBCwUAA4IBAQA8FL3PJR5cRXTomRKVCY1/M/vit7lhlPN8X0QtoheMcp/kGs3JmBKgdh2KDfHaP/+3GtpX6cwlmntA4hzSCnlcbOHkSz2jfgYkwycr6cPHeNcK1sQdX4fTLlP6Gye42SAU3PSNRObTO8zwIkOhh6AqEjiD3uf16+BoUWCNf8SteiG+6Egw3p49GDMsz0Vrec/RjUi+pq8YuGOTppPT4nc5uwVwTvOgpEi3HVMJEfsWj+TwOi76kc+3MUcN2zrFszbGtBiBdtv3EIjMWtv3KKemPn3iqoYkCG474tuLj257yjAnx3Wmp37/K4WnsAfMZQrBMN3hPMdveJtLCkn1Ck2Y",
+          "x-doctordo-signature": "Pf1YD5H8B5D4tyTSBNZChHI0fqO/1uYyWjJwPP4RJv2upNfqtsLnj2W00BkKALI0sZj4C6va4k24AM6bi90tKnZkqNKm43RamioH/q1WNS4em6UFqq2ibl9vOGaipWe5uwSbq3eqSttJgoZHvNI07mvApAk6miYONezuuOqpnxl0dWRPh9L7Yx8xTvW6VI/wZQazr4eaQfdMCMiTv2IrC5fRwxG20o20XeGTwOclxTaM/tku3RKEEp/1fCpeHuJzc61CJ9lgncaiE2A2FHW+gVPVTDsAe3bZvDKmEg+X96Lq7aebMabD0aFudlPawuxWIP16yW1L2mQKkf0Jbsv0ng=="
+        }
+      },
+      "canonicalString": "DOCTORDO-SIG-1\nPOST\n/v1/ingest\nfunc-doctordo-ingest-dev-abcde.azurewebsites.net\ntelemetry\n2026-10-12T14:00:00Z\n2026-10-12T14:03:22Z\nq8h3kZb1R0m5x2Tn7Yw4Vg\n2Bz/uXI07GyJi/9BLaqL44Wfrg5bGEPb4LyWxl3vkPA=",
+      "bodySha256Base64": "2Bz/uXI07GyJi/9BLaqL44Wfrg5bGEPb4LyWxl3vkPA="
+    },
+    {
+      "name": "ecdsa-tenant-ca-key",
+      "algorithm": "ecdsa-p256-sha256-p1363",
+      "privateKeyPkcs8Pem": "-----BEGIN PRIVATE KEY-----\r\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg+HVHfLdMh4wacD5m\r\nqP24LgzjgHjoRrkpurl/avAN0AihRANCAASgKCuQAVxTNqaTdQNuOfeRfNGwDQTq\r\nJkwhseYylUH9R122ClNqdlJ7/pO44weakE67BC1FA1NSqi3kHCRhl82b\r\n-----END PRIVATE KEY-----\r\n",
+      "certificatePem": "-----BEGIN CERTIFICATE-----\r\nMIICzTCCAbWgAwIBAgIUQvTuu8EMUoj7JYRhO8yUJ+P4b0owDQYJKoZIhvcNAQEL\r\nBQAwfjEfMB0GA1UEAwwWTVMtT3JnYW5pemF0aW9uLUFjY2VzczEtMCsGA1UECwwk\r\nODJkYmFjYTQtM2U4MS00NmNhLTljNzMtMDk1MGMxZWFjYTk3MRcwFQYKCZImiZPy\r\nLGQBGRYHd2luZG93czETMBEGCgmSJomT8ixkARkWA25ldDAeFw0yNjEwMTIxODE3\r\nNTBaFw0zNjEwMDkxODE3NTBaMC8xLTArBgNVBAMMJDNmMGM2YTJlLTVkMWItNGI4\r\nZS05YTdjLTJlNGY2YjhkMGExMzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABKAo\r\nK5ABXFM2ppN1A24595F80bANBOomTCGx5jKVQf1HXbYKU2p2Unv+k7jjB5qQTrsE\r\nLUUDU1KqLeQcJGGXzZujXTBbMAkGA1UdEwQCMAAwDgYDVR0PAQH/BAQDAgeAMB0G\r\nA1UdDgQWBBTF5U4/5aKlwMf+Gn0WqRjgoYnj+DAfBgNVHSMEGDAWgBSWQG9qX1/l\r\n9aWzeAUi+BFl14afmTANBgkqhkiG9w0BAQsFAAOCAQEAjUXvNpbUOGFvEh/p3fne\r\nPl6UtCABMdHkKF590N0UFJ5+wReVwQYELxbtm56DOCvLp4DQsoB80w6RhJuzv/EC\r\nBoRvOb7uBkPBTIOd4rMGdH/zn1zto9gFWEfa6KWfknCblc1JHNKLmsyf3KEUBVvv\r\nvly02LycKpJ07rr1NYaOhzg2+0wfqh44TZAH5TpwBD9BPTmdjrVoPthZC4MgYeQw\r\n0Hjz5A8pqxZ155SNiWX7ohPpw7ngUgAYENdEh0ZZUZZzeztsJBRUbKOnlH3YMvu9\r\nW3Y5VrNsFiczOhixyu/SU7B+Nf4yaQdJVN8iQyQ5QsvNECozKFwvMUy3knjQ6Wdl\r\ntg==\r\n-----END CERTIFICATE-----\r\n",
+      "certificateSha1Thumbprint": "9116D013E4CF73DBAD8093871D05E1B90298130B",
+      "request": {
+        "method": "POST",
+        "path": "/v1/ingest",
+        "host": "func-doctordo-ingest-dev-abcde.azurewebsites.net",
+        "bodyBase64": "H4sIAAAAAAAAA6tWyk7NyVeyUlAqLilKTE5VqgUAc0n1jRMAAAA=",
+        "headers": {
+          "x-doctordo-kind": "telemetry",
+          "x-doctordo-collected-at": "2026-10-12T14:00:00Z",
+          "x-doctordo-signed-at": "2026-10-12T14:03:22Z",
+          "x-doctordo-nonce": "q8h3kZb1R0m5x2Tn7Yw4Vg",
+          "x-doctordo-device-cert": "MIICzTCCAbWgAwIBAgIUQvTuu8EMUoj7JYRhO8yUJ+P4b0owDQYJKoZIhvcNAQELBQAwfjEfMB0GA1UEAwwWTVMtT3JnYW5pemF0aW9uLUFjY2VzczEtMCsGA1UECwwkODJkYmFjYTQtM2U4MS00NmNhLTljNzMtMDk1MGMxZWFjYTk3MRcwFQYKCZImiZPyLGQBGRYHd2luZG93czETMBEGCgmSJomT8ixkARkWA25ldDAeFw0yNjEwMTIxODE3NTBaFw0zNjEwMDkxODE3NTBaMC8xLTArBgNVBAMMJDNmMGM2YTJlLTVkMWItNGI4ZS05YTdjLTJlNGY2YjhkMGExMzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABKAoK5ABXFM2ppN1A24595F80bANBOomTCGx5jKVQf1HXbYKU2p2Unv+k7jjB5qQTrsELUUDU1KqLeQcJGGXzZujXTBbMAkGA1UdEwQCMAAwDgYDVR0PAQH/BAQDAgeAMB0GA1UdDgQWBBTF5U4/5aKlwMf+Gn0WqRjgoYnj+DAfBgNVHSMEGDAWgBSWQG9qX1/l9aWzeAUi+BFl14afmTANBgkqhkiG9w0BAQsFAAOCAQEAjUXvNpbUOGFvEh/p3fnePl6UtCABMdHkKF590N0UFJ5+wReVwQYELxbtm56DOCvLp4DQsoB80w6RhJuzv/ECBoRvOb7uBkPBTIOd4rMGdH/zn1zto9gFWEfa6KWfknCblc1JHNKLmsyf3KEUBVvvvly02LycKpJ07rr1NYaOhzg2+0wfqh44TZAH5TpwBD9BPTmdjrVoPthZC4MgYeQw0Hjz5A8pqxZ155SNiWX7ohPpw7ngUgAYENdEh0ZZUZZzeztsJBRUbKOnlH3YMvu9W3Y5VrNsFiczOhixyu/SU7B+Nf4yaQdJVN8iQyQ5QsvNECozKFwvMUy3knjQ6Wdltg==",
+          "x-doctordo-signature": "hm5BLBHWQ7QbiPPVGSEdBaJSjBG/VCG5VHFu3psAEi3xs/U1v+/CN1FfPNqpID+1vFI2cdJlx8hxfWzi3Hk2dA=="
+        }
+      },
+      "canonicalString": "DOCTORDO-SIG-1\nPOST\n/v1/ingest\nfunc-doctordo-ingest-dev-abcde.azurewebsites.net\ntelemetry\n2026-10-12T14:00:00Z\n2026-10-12T14:03:22Z\nq8h3kZb1R0m5x2Tn7Yw4Vg\n2Bz/uXI07GyJi/9BLaqL44Wfrg5bGEPb4LyWxl3vkPA=",
+      "bodySha256Base64": "2Bz/uXI07GyJi/9BLaqL44Wfrg5bGEPb4LyWxl3vkPA="
+    }
+  ],
+  "entraBinding": {
+    "status": "community-reported format, NOT verified against a real tenant (lab gate V-2 in docs/24)",
+    "description": "Graph device.alternativeSecurityIds[].key is base64 of a UTF-16LE string \"X509:<SHA1-TP-PUBKEY>\" + upper-case SHA-1 certificate thumbprint (40 hex) + base64 hash of the public key. Which hash and which public-key encoding is unconfirmed, so verifiers accept any of the four variants below and record which one matched.",
+    "variants": [
+      "sha1-pkcs1",
+      "sha1-spki",
+      "sha256-pkcs1",
+      "sha256-spki"
+    ],
+    "device": {
+      "deviceId": "3f0c6a2e-5d1b-4b8e-9a7c-2e4f6b8d0a13",
+      "accountEnabled": true,
+      "trustType": "AzureAd",
+      "alternativeSecurityIds": [
+        {
+          "type": 2,
+          "identityProvider": null,
+          "key": "WAA1ADAAOQA6ADwAUwBIAEEAMQAtAFQAUAAtAFAAVQBCAEsARQBZAD4AQQAwAEIANABFAEMAOQAyADcANwBCADAAQgA5AEQARAAyADYANgBFADIAOQBGAEQAMQAxADAANAA4AEQARQBGAEEANQAxAEEAQQA2ADUANQBtAG8AdwB3ADUANQBVAHEANwAzAGwATABDADIAUQBxADYANwBRAHEAegBkAEIAcwBFADIANAA9AA=="
+        }
+      ]
+    },
+    "expectMatch": {
+      "case": "rsa-entra-device-key",
+      "variant": "sha1-pkcs1"
+    },
+    "expectNoMatch": {
+      "case": "ecdsa-tenant-ca-key",
+      "reason": "a different key is presented for the same device ID"
+    }
+  }
+}

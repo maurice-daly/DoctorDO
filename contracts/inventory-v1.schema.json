@@ -1,0 +1,1986 @@
+{
+  "$ref": "#/definitions/DoctorDOInventoryV1",
+  "definitions": {
+    "DoctorDOInventoryV1": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "number",
+          "const": 1
+        },
+        "kind": {
+          "type": "string",
+          "const": "inventory"
+        },
+        "collector": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "DoctorDO.Collector"
+            },
+            "version": {
+              "type": "string",
+              "pattern": "^\\d+\\.\\d+\\.\\d+"
+            }
+          },
+          "required": [
+            "name",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "collectedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "anonymised": {
+          "type": "boolean"
+        },
+        "device": {
+          "type": "object",
+          "properties": {
+            "deviceId": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "hostname": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "osBuild": {
+              "type": "string",
+              "minLength": 1
+            },
+            "osEdition": {
+              "type": "string",
+              "minLength": 1
+            },
+            "isSupportedEdition": {
+              "type": "boolean"
+            },
+            "isVirtual": {
+              "type": "boolean"
+            },
+            "ramGB": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "systemDiskGB": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "cacheDriveGB": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "chassis": {
+              "type": "string",
+              "enum": [
+                "Desktop",
+                "Laptop",
+                "Tablet",
+                "Server",
+                "VM",
+                "Unknown"
+              ]
+            },
+            "isConfigMgrClient": {
+              "type": "boolean"
+            },
+            "domainJoined": {
+              "type": "boolean"
+            },
+            "entraJoined": {
+              "type": "boolean"
+            },
+            "powerPlan": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "uusVersion": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "deviceId",
+            "hostname",
+            "osBuild",
+            "osEdition",
+            "isSupportedEdition",
+            "isVirtual",
+            "ramGB",
+            "systemDiskGB",
+            "cacheDriveGB",
+            "chassis",
+            "isConfigMgrClient",
+            "domainJoined",
+            "entraJoined"
+          ],
+          "additionalProperties": false
+        },
+        "management": {
+          "type": "object",
+          "properties": {
+            "joinType": {
+              "type": "string",
+              "enum": [
+                "entra",
+                "hybrid",
+                "domain",
+                "registered",
+                "none"
+              ]
+            },
+            "entraDeviceId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tenantId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "mdm": {
+              "type": "object",
+              "properties": {
+                "enrolled": {
+                  "type": "boolean"
+                },
+                "provider": {
+                  "type": "string",
+                  "enum": [
+                    "intune",
+                    "other",
+                    "none"
+                  ]
+                },
+                "enrolmentType": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "intuneDeviceId": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "serverHost": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "enrolled",
+                "provider",
+                "enrolmentType",
+                "intuneDeviceId",
+                "serverHost"
+              ],
+              "additionalProperties": false
+            },
+            "configMgr": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "client": {
+                      "type": "boolean"
+                    },
+                    "siteCode": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "boundaryGroups": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "maxItems": 32
+                    },
+                    "coManagementFlags": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4294967295
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "client",
+                    "siteCode",
+                    "boundaryGroups"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "autopilot": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "groupTag": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "groupTag"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "updateSource": {
+              "type": "string",
+              "enum": [
+                "wufb",
+                "wsus",
+                "configmgr",
+                "unknown"
+              ]
+            }
+          },
+          "required": [
+            "joinType",
+            "entraDeviceId",
+            "tenantId",
+            "mdm",
+            "configMgr",
+            "autopilot",
+            "updateSource"
+          ],
+          "additionalProperties": false
+        },
+        "hardware": {
+          "type": "object",
+          "properties": {
+            "manufacturer": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "model": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "serialHash": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/device/properties/deviceId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "biosVersion": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cpu": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "logicalCores": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "logicalCores"
+              ],
+              "additionalProperties": false
+            },
+            "tpm": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "present": {
+                      "type": "boolean"
+                    },
+                    "version": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "present",
+                    "version"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "disks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "SSD",
+                      "HDD",
+                      "NVMe",
+                      "Unknown"
+                    ]
+                  },
+                  "sizeGB": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "kind",
+                  "sizeGB"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 8
+            }
+          },
+          "required": [
+            "manufacturer",
+            "model",
+            "serialHash",
+            "biosVersion",
+            "cpu",
+            "tpm",
+            "disks"
+          ],
+          "additionalProperties": false
+        },
+        "os": {
+          "type": "object",
+          "properties": {
+            "build": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ubr": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "edition": {
+              "type": "string",
+              "minLength": 1
+            },
+            "displayVersion": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "installDate": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "build",
+            "ubr",
+            "edition",
+            "displayVersion",
+            "installDate"
+          ],
+          "additionalProperties": false
+        },
+        "network": {
+          "type": "object",
+          "properties": {
+            "adapterType": {
+              "type": "string",
+              "enum": [
+                "Ethernet",
+                "Wi-Fi",
+                "Cellular",
+                "VPN",
+                "Other",
+                "Unknown"
+              ]
+            },
+            "isVpnActive": {
+              "type": "boolean"
+            },
+            "vpnAdapterNames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 16
+            },
+            "matchesDefaultVpnKeywords": {
+              "type": "boolean"
+            },
+            "vpnMatchedKeywords": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "maxItems": 16
+            },
+            "isMetered": {
+              "type": "boolean"
+            },
+            "localSubnet": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "defaultGateway": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "publicEgressHash": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/device/properties/deviceId"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "adSite": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "dhcpOption234": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "dhcpOption235": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "localPolicyMergeEnabled": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "proxy": {
+              "type": "object",
+              "properties": {
+                "configured": {
+                  "type": "boolean"
+                },
+                "wininetScope": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "per-user",
+                    "device-wide"
+                  ]
+                },
+                "netshConfigured": {
+                  "type": "boolean"
+                },
+                "autoDetect": {
+                  "type": "boolean"
+                },
+                "pacUrlHost": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "bypassLocal": {
+                  "type": "boolean"
+                },
+                "pac": {
+                  "type": "object",
+                  "properties": {
+                    "configured": {
+                      "type": "boolean"
+                    },
+                    "versions": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "referencesDo": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ]
+                    },
+                    "userProfiles": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "pattern": "^pac:[0-9a-f]{16}$"
+                          },
+                          "basis": {
+                            "type": "string",
+                            "enum": [
+                              "content",
+                              "url"
+                            ]
+                          },
+                          "scopes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "device",
+                                "user",
+                                "service"
+                              ]
+                            },
+                            "maxItems": 3
+                          },
+                          "userProfiles": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "fetch": {
+                            "type": "string",
+                            "enum": [
+                              "ok",
+                              "too-large",
+                              "timeout",
+                              "failed",
+                              "unsupported",
+                              "skipped"
+                            ]
+                          },
+                          "doReferences": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "do-cloud",
+                                "do-content",
+                                "wu-content"
+                              ]
+                            },
+                            "maxItems": 3
+                          },
+                          "routes": {
+                            "type": "object",
+                            "properties": {
+                              "doCloud": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "direct",
+                                      "proxy",
+                                      "error"
+                                    ]
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "doContent": {
+                                "$ref": "#/definitions/DoctorDOInventoryV1/properties/network/properties/proxy/properties/pac/properties/items/items/properties/routes/properties/doCloud"
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "scopes",
+                          "userProfiles",
+                          "routes"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 4
+                    }
+                  },
+                  "required": [
+                    "configured",
+                    "versions",
+                    "referencesDo",
+                    "userProfiles",
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "configured",
+                "wininetScope",
+                "netshConfigured",
+                "autoDetect",
+                "pacUrlHost",
+                "bypassLocal"
+              ],
+              "additionalProperties": false
+            },
+            "doAdapter": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "physical",
+                        "virtual"
+                      ]
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "Ethernet",
+                        "Wi-Fi",
+                        "Other"
+                      ]
+                    },
+                    "ifType": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "default": null
+                    },
+                    "subnet": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 64
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "defaultRoute": {
+                      "type": [
+                        "boolean",
+                        "null"
+                      ],
+                      "default": null
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "subnet"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "defaultRouteSubnet": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "dhcp": {
+              "type": "object",
+              "properties": {
+                "wants": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "234",
+                      "235"
+                    ]
+                  },
+                  "maxItems": 2,
+                  "default": []
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "answered",
+                    "api-failed",
+                    "timeout",
+                    "no-adapter",
+                    "not-queried",
+                    "unavailable"
+                  ]
+                },
+                "subnetMask": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "default": null
+                },
+                "option234": {
+                  "type": "string",
+                  "enum": [
+                    "received",
+                    "absent",
+                    "not-queried"
+                  ]
+                },
+                "option235": {
+                  "type": "string",
+                  "enum": [
+                    "received",
+                    "absent",
+                    "not-queried"
+                  ]
+                },
+                "win32Error": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "adapterType",
+            "isVpnActive",
+            "vpnAdapterNames",
+            "matchesDefaultVpnKeywords",
+            "isMetered",
+            "localSubnet",
+            "defaultGateway",
+            "publicEgressHash",
+            "adSite",
+            "dhcpOption234",
+            "dhcpOption235",
+            "localPolicyMergeEnabled",
+            "proxy"
+          ],
+          "additionalProperties": false
+        },
+        "doConfig": {
+          "type": "object",
+          "properties": {
+            "effective": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "anyOf": [
+                      {
+                        "type": [
+                          "number",
+                          "string"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "Mdm",
+                      "GroupPolicy",
+                      "Default",
+                      "Unknown"
+                    ]
+                  },
+                  "source": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "mdm",
+                          "gp",
+                          "local",
+                          "admin",
+                          "default",
+                          "unknown"
+                        ]
+                      },
+                      "mdm": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "provider": {
+                                "type": "string",
+                                "enum": [
+                                  "intune",
+                                  "other"
+                                ]
+                              },
+                              "providerId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 64
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ],
+                                "default": null
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      },
+                      "basis": {
+                        "type": "string",
+                        "enum": [
+                          "do-service",
+                          "registry",
+                          "mdm-wins-over-gp",
+                          "unresolved"
+                        ]
+                      },
+                      "setIn": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "mdm",
+                            "gp",
+                            "local"
+                          ]
+                        },
+                        "maxItems": 3,
+                        "default": []
+                      },
+                      "alt": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "store": {
+                              "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/effective/additionalProperties/properties/source/properties/setIn/items"
+                            },
+                            "value": {
+                              "anyOf": [
+                                {
+                                  "type": [
+                                    "number",
+                                    "string"
+                                  ]
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "store",
+                            "value"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "maxItems": 3,
+                        "default": []
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "value",
+                  "provider"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "stores": {
+              "type": "object",
+              "properties": {
+                "policy": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "present": {
+                      "type": "boolean"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "REG_DWORD",
+                              "REG_QWORD",
+                              "REG_SZ",
+                              "REG_EXPAND_SZ",
+                              "REG_MULTI_SZ",
+                              "REG_BINARY"
+                            ]
+                          },
+                          "data": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "type",
+                          "data"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 256
+                    },
+                    "confidence": {
+                      "type": "string",
+                      "enum": [
+                        "documented",
+                        "to-verify"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "present",
+                    "values",
+                    "confidence"
+                  ],
+                  "additionalProperties": false
+                },
+                "mdm": {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/stores/properties/policy"
+                },
+                "serviceConfig": {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/stores/properties/policy"
+                },
+                "userSettings": {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/stores/properties/policy"
+                },
+                "networkServiceSettings": {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/stores/properties/policy"
+                },
+                "serviceState": {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/stores/properties/policy"
+                }
+              },
+              "additionalProperties": false,
+              "default": {}
+            },
+            "workingDirectory": {
+              "type": "string"
+            },
+            "mdmWinsOverGp": {
+              "type": "boolean"
+            },
+            "cacheFolder": {
+              "type": "object",
+              "properties": {
+                "custom": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "default": null
+                },
+                "exists": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "default": null
+                },
+                "networkService": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "full",
+                        "partial",
+                        "none"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "doSvc": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DoctorDOInventoryV1/properties/doConfig/properties/cacheFolder/properties/networkService/anyOf/0"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "denyEntries": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null
+                },
+                "stateFile": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "default": null
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "effective"
+          ],
+          "additionalProperties": false
+        },
+        "firewallRules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "displayName": {
+                "type": "string"
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "Inbound",
+                  "Outbound"
+                ]
+              },
+              "action": {
+                "type": "string",
+                "enum": [
+                  "Allow",
+                  "Block"
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "protocol": {
+                "type": "string"
+              },
+              "localPort": {
+                "type": "string"
+              },
+              "program": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "service": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "profiles": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "Domain",
+                    "Private",
+                    "Public"
+                  ]
+                }
+              },
+              "remotePort": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "primaryStatus": {
+                "type": "string",
+                "enum": [
+                  "OK",
+                  "Inactive",
+                  "Error",
+                  "Unknown"
+                ]
+              },
+              "remoteScope": {
+                "type": "string",
+                "enum": [
+                  "any",
+                  "local-subnet",
+                  "ranges",
+                  "keywords",
+                  "mixed"
+                ]
+              },
+              "remoteAddresses": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "enforcementStatus": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z]{1,40}$"
+                },
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "displayName",
+              "direction",
+              "action",
+              "enabled",
+              "protocol",
+              "localPort",
+              "program",
+              "service",
+              "profiles"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 64,
+          "default": []
+        },
+        "connectivity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "checkId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target": {
+                "type": "string"
+              },
+              "protocol": {
+                "type": "string",
+                "enum": [
+                  "dns",
+                  "tcp",
+                  "http",
+                  "https",
+                  "udp",
+                  "local"
+                ]
+              },
+              "port": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "fail",
+                  "warn",
+                  "not-applicable",
+                  "not-collected"
+                ]
+              },
+              "latencyMs": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "detail": {
+                "type": "string"
+              },
+              "evidence": {
+                "type": "string",
+                "maxLength": 4096
+              },
+              "endpoint": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9-]{1,40}$"
+                  },
+                  "basis": {
+                    "type": "string",
+                    "enum": [
+                      "observed",
+                      "documented",
+                      "configured",
+                      "not-testable",
+                      "not-applicable"
+                    ]
+                  },
+                  "dns": {
+                    "type": "string",
+                    "enum": [
+                      "pass",
+                      "fail",
+                      "warn",
+                      "not-applicable",
+                      "not-collected"
+                    ]
+                  },
+                  "tcp": {
+                    "$ref": "#/definitions/DoctorDOInventoryV1/properties/connectivity/items/properties/endpoint/properties/dns"
+                  },
+                  "tls": {
+                    "$ref": "#/definitions/DoctorDOInventoryV1/properties/connectivity/items/properties/endpoint/properties/dns"
+                  },
+                  "http": {
+                    "$ref": "#/definitions/DoctorDOInventoryV1/properties/connectivity/items/properties/endpoint/properties/dns"
+                  },
+                  "range": {
+                    "$ref": "#/definitions/DoctorDOInventoryV1/properties/connectivity/items/properties/endpoint/properties/dns"
+                  },
+                  "dnsTypes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "A",
+                        "AAAA"
+                      ]
+                    },
+                    "maxItems": 2,
+                    "default": []
+                  },
+                  "addrs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[0-9A-Fa-f:.]{2,45}$"
+                    },
+                    "maxItems": 2,
+                    "default": []
+                  },
+                  "httpStatus": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 599
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "cert": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "issuer": {
+                            "type": "string",
+                            "enum": [
+                              "microsoft",
+                              "other-trusted",
+                              "untrusted"
+                            ]
+                          },
+                          "nameOk": {
+                            "type": "boolean"
+                          },
+                          "chainOk": {
+                            "type": "boolean"
+                          },
+                          "issuerCn": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 64
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "default": null
+                          }
+                        },
+                        "required": [
+                          "issuer",
+                          "nameOk",
+                          "chainOk"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "proxy": {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "netsh",
+                          "wininet",
+                          "pac",
+                          "wpad",
+                          "unresolved"
+                        ]
+                      },
+                      "used": {
+                        "type": "boolean"
+                      },
+                      "direct": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/definitions/DoctorDOInventoryV1/properties/connectivity/items/properties/endpoint/properties/dns"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "default": null
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "used"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "err": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "pattern": "^[a-z0-9-]{1,40}$"
+                          },
+                          "message": {
+                            "type": "string",
+                            "maxLength": 200
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null
+                  },
+                  "at": {
+                    "$ref": "#/definitions/DoctorDOInventoryV1/properties/collectedAt"
+                  },
+                  "cached": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "basis",
+                  "dns",
+                  "tcp",
+                  "tls",
+                  "http",
+                  "range",
+                  "proxy",
+                  "at"
+                ],
+                "additionalProperties": false
+              },
+              "code": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]{1,48}$"
+              }
+            },
+            "required": [
+              "checkId",
+              "target",
+              "protocol",
+              "port",
+              "result",
+              "latencyMs",
+              "detail"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 128,
+          "default": []
+        },
+        "notCollected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "unsupported-os",
+                  "insufficient-rights",
+                  "cmdlet-missing",
+                  "timeout",
+                  "skipped-by-flag",
+                  "error"
+                ]
+              },
+              "detail": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 256
+        },
+        "provisioning": {
+          "type": "object",
+          "properties": {
+            "esp": {
+              "type": "object",
+              "properties": {
+                "firstStatusAt": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DoctorDOInventoryV1/properties/collectedAt"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "lastStatusAt": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/DoctorDOInventoryV1/properties/collectedAt"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "statusesUnparsed": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "deviceSetup": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "completed": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "error": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "inProgress": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "notInstalled": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "required": [
+                    "total",
+                    "completed",
+                    "error",
+                    "inProgress",
+                    "notInstalled"
+                  ],
+                  "additionalProperties": false
+                },
+                "accountSetup": {
+                  "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/esp/properties/deviceSetup"
+                }
+              },
+              "required": [
+                "firstStatusAt",
+                "lastStatusAt",
+                "statusesUnparsed",
+                "deviceSetup",
+                "accountSetup"
+              ],
+              "additionalProperties": false
+            },
+            "appsTotal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "apps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "phase": {
+                    "type": "string",
+                    "enum": [
+                      "device",
+                      "user"
+                    ]
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "notInstalled",
+                      "inProgress",
+                      "completed",
+                      "error",
+                      "unknown"
+                    ]
+                  },
+                  "reboot": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "notRequired",
+                          "soft",
+                          "hard"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "firstStatusAt": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/DoctorDOInventoryV1/properties/collectedAt"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "lastStatusAt": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/DoctorDOInventoryV1/properties/collectedAt"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "phase",
+                  "state",
+                  "reboot",
+                  "firstStatusAt",
+                  "lastStatusAt"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 30
+            },
+            "delivery": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "capturedAt": {
+                      "$ref": "#/definitions/DoctorDOInventoryV1/properties/collectedAt"
+                    },
+                    "anchor": {
+                      "type": "string",
+                      "enum": [
+                        "esp",
+                        "os-install"
+                      ]
+                    },
+                    "ageHours": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 168
+                    },
+                    "jobs": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "jobsOutsideEsp": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "foreground": {
+                      "type": "object",
+                      "properties": {
+                        "jobs": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "bytes": {
+                          "type": "object",
+                          "properties": {
+                            "http": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "pattern": "^\\d+$"
+                                },
+                                {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              ]
+                            },
+                            "cache": {
+                              "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                            },
+                            "lan": {
+                              "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                            },
+                            "group": {
+                              "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                            },
+                            "internet": {
+                              "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                            }
+                          },
+                          "required": [
+                            "http",
+                            "cache",
+                            "lan",
+                            "group",
+                            "internet"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "downloadMs": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "jobs",
+                        "bytes",
+                        "downloadMs"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "background": {
+                      "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground"
+                    },
+                    "belowMinFileSize": {
+                      "type": "object",
+                      "properties": {
+                        "jobs": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "bytes": {
+                          "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                        },
+                        "minFileSizeMB": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "jobs",
+                        "bytes",
+                        "minFileSizeMB"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "largest": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sizeBytes": {
+                            "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                          },
+                          "priority": {
+                            "type": "string",
+                            "enum": [
+                              "foreground",
+                              "background"
+                            ]
+                          },
+                          "http": {
+                            "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                          },
+                          "cache": {
+                            "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                          },
+                          "peers": {
+                            "$ref": "#/definitions/DoctorDOInventoryV1/properties/provisioning/properties/delivery/anyOf/0/properties/foreground/properties/bytes/properties/http"
+                          },
+                          "downloadMs": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "caller": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 64
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "sizeBytes",
+                          "priority",
+                          "http",
+                          "cache",
+                          "peers",
+                          "downloadMs",
+                          "caller"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxItems": 10
+                    }
+                  },
+                  "required": [
+                    "capturedAt",
+                    "anchor",
+                    "ageHours",
+                    "jobs",
+                    "foreground",
+                    "background",
+                    "belowMinFileSize",
+                    "largest"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "esp",
+            "appsTotal",
+            "apps",
+            "delivery"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "kind",
+        "collector",
+        "collectedAt",
+        "anonymised",
+        "device",
+        "management",
+        "hardware",
+        "os",
+        "network",
+        "doConfig",
+        "notCollected"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
