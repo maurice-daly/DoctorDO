@@ -325,9 +325,12 @@ function Get-DDConnectivityMatrix {
         }
     }
     # firewall rules: inbound Allow rules for TCP 7680 found by port as well as by name (Test-DDTcp7680Allow); a rule that
-    # is enabled but whose PrimaryStatus is not OK is not in force.
+    # is enabled but whose PrimaryStatus is not OK is not in force, and one limited to another program or service does
+    # not admit Delivery Optimization. When Windows refused part of the listing, a rule not found is unknown, not absent.
     $rules = @($FirewallRules)
+    $fwComplete = Test-DDFirewallRulesComplete -Context $Context
     $tcpAllow = @($rules | Where-Object { (Test-DDTcp7680Allow -Rule $_) -and $_['enabled'] })
+    $otherScope = @($rules | Where-Object { $_['enabled'] -and (Test-DDTcp7680Allow -Rule $_ -AnyProgram) -and -not (Test-DDTcp7680Allow -Rule $_) })
     $inForce = @($tcpAllow | Where-Object { $null -eq (Get-DDProp $_ 'primaryStatus') -or (Get-DDProp $_ 'primaryStatus') -eq 'OK' })
     $notInForce = @($tcpAllow | Where-Object { $null -ne (Get-DDProp $_ 'primaryStatus') -and (Get-DDProp $_ 'primaryStatus') -ne 'OK' })
     $blockers = @($rules | Where-Object { $_['direction'] -eq 'Inbound' -and $_['action'] -eq 'Block' -and $_['enabled'] -and $_['displayName'] -notmatch '(?i)Delivery Optimization' -and
@@ -342,14 +345,23 @@ function Get-DDConnectivityMatrix {
     elseif ($allOff) { $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'pass' -Detail 'Windows Defender Firewall is off on every profile, so it blocks nothing (another firewall may be in its place)'; $fwCheck['code'] = 'firewall-off' }
     elseif ($shields.Count -gt 0) { $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'fail' -Detail "Firewall policy blocks all inbound connections on the $($shields -join ', ') profile (AllowInboundRules=False), whatever the Delivery Optimization rules say (DO-NET-010)"; $fwCheck['code'] = 'inbound-shield' }
     elseif ($blockers.Count -gt 0) { $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'fail' -Detail "An enabled inbound Block rule could shadow the DO allow rules: '$($blockers[0]['displayName'])' (DO-NET-010)"; $fwCheck['code'] = 'shadowed' }
+    elseif ($inForce.Count -eq 0 -and -not $fwComplete) {
+        $read = $(if ($notInForce.Count -gt 0) { " The one it could read, '$($notInForce[0]['displayName'])', is enabled but its status is $((Get-DDProp $notInForce[0] 'primaryStatus'))$(Get-DDEnforcementText -Rule $notInForce[0])." } else { ' None of those it could read admits TCP 7680.' })
+        $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'not-collected' -Detail "Windows refused to list every firewall rule (run it elevated), so whether a rule admits TCP 7680 is not known.$read"
+        $fwCheck['code'] = 'rules-unreadable'
+    }
     elseif ($inForce.Count -eq 0 -and $notInForce.Count -gt 0) {
         $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'fail' -Detail "The inbound Allow rule for TCP 7680 '$($notInForce[0]['displayName'])' is enabled but its status is $((Get-DDProp $notInForce[0] 'primaryStatus')), so it is not in force$(Get-DDEnforcementText -Rule $notInForce[0]) (DO-NET-019)"
         $fwCheck['code'] = 'not-in-force'
     }
-    elseif ($inForce.Count -eq 0) { $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'fail' -Detail 'No enabled inbound Allow rule for TCP 7680 found, by name or by port (absent or disabled, DO-NET-010)'; $fwCheck['code'] = 'no-allow' }
+    elseif ($inForce.Count -eq 0) {
+        $scopeNote = $(if ($otherScope.Count -gt 0) { ". '$($otherScope[0]['displayName'])' names TCP 7680 but admits only $(Get-DDScopeText -Rule $otherScope[0]), not Delivery Optimization (the dosvc service in svchost.exe)" } else { '' })
+        $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'fail' -Detail "No enabled inbound Allow rule for TCP 7680 found, by name or by port (absent or disabled, DO-NET-010)$scopeNote"; $fwCheck['code'] = 'no-allow'
+    }
     else {
         $named = @($inForce | ForEach-Object { "'$($_['displayName'])'" } | Select-Object -First 2) -join ', '
-        $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'pass' -Detail "$($inForce.Count) enabled inbound Allow rule(s) admit TCP 7680 ($named), no shadowing Block rule"
+        $partial = $(if (-not $fwComplete) { '. Windows refused to list every rule, so a Block rule could be among those not read' } else { '' })
+        $fwCheck = New-DDCheck -CheckId 'p2p-firewall-rule' -Protocol local -Port 7680 -Result 'pass' -Detail "$($inForce.Count) enabled inbound Allow rule(s) admit TCP 7680 ($named), no shadowing Block rule$partial"
     }
     $checks.Add($fwCheck)
 
@@ -492,7 +504,8 @@ function Get-DDConnectivityMatrix {
     # ---- Delivery Optimization health (Health.ps1): geo service, cache server in use, DHCP 235/234, rule scope, outbound
     # blocks, cache folder, state file, uploading on battery ---------------------------------------------------------------
     foreach ($c in (New-DDHealthChecks -DoEffective $DoEffective -Network $Network -FirewallRules $rules -Geo $GeoAnswer -CacheHost $CacheResolution -Dhcp $Dhcp `
-                -CacheFolder $CacheFolder -Vitals $Vitals -PowerPlan $PowerPlan -ModeNum $modeNum -SkipProbes:$SkipProbes -BatteryCollected $batteryRead)) { $checks.Add($c) }
+                -CacheFolder $CacheFolder -Vitals $Vitals -PowerPlan $PowerPlan -ModeNum $modeNum -SkipProbes:$SkipProbes -BatteryCollected $batteryRead `
+                -FirewallRulesComplete $fwComplete)) { $checks.Add($c) }
 
     if ($SkipProbes) { Add-DDNotCollected -Context $Context -Field 'connectivity' -Reason 'skipped-by-flag' -Detail 'network probes skipped by -SkipConnectivityChecks' }
     $kept = Select-DDMatrixRows -Checks $checks.ToArray() -Max $script:DDMaxMatrixChecks

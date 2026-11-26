@@ -391,6 +391,81 @@ Describe 'Inbound rules for TCP 7680: by port, in force, and scoped' {
         ($m | Where-Object checkId -eq 'teredo-outbound-rule').result | Should -Be 'fail'
         ($m | Where-Object checkId -eq 'p2p-firewall-rule').result | Should -Be 'pass' -Because 'an outbound block does not shadow the inbound allow rule'
     }
+
+    It 'does not count a rule limited to another program or service, whatever its port, and names it (issue 1)' {
+        Initialize-FakeDevice
+        Mock -ModuleName DoctorDO.Collector Get-DDFirewallRulesRaw {
+            , @([pscustomobject]@{ DisplayName = 'Contoso Agent (TCP-In)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any'; Protocol = 'TCP'; LocalPort = '1024-65535'; RemotePort = 'Any'
+                    RemoteAddress = @('Any'); PrimaryStatus = 'OK'; Program = 'C:\Program Files\Contoso\agent.exe'; Service = 'Any' },
+                [pscustomobject]@{ DisplayName = 'Update service 7680'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any'; Protocol = 'TCP'; LocalPort = '7680'; RemotePort = 'Any'
+                    RemoteAddress = @('Any'); PrimaryStatus = 'OK'; Program = '%SystemRoot%\system32\svchost.exe'; Service = 'wuauserv' })
+        }
+        $m = Get-DOConnectivityMatrix
+        $fw = $m | Where-Object checkId -eq 'p2p-firewall-rule'
+        $fw.result | Should -Be 'fail' -Because 'neither rule lets the dosvc service through'
+        $fw.code | Should -Be 'no-allow'
+        $fw.detail | Should -Match 'DO-NET-010'
+        $fw.detail | Should -Match "'Contoso Agent \(TCP-In\)' names TCP 7680 but admits only the program agent\.exe"
+        ($m | Where-Object checkId -eq 'p2p-inbound').result | Should -Be 'fail'
+        ($m | Where-Object checkId -eq 'p2p-firewall-scope').code | Should -Be 'no-allow' -Because 'the scope check judges only rules that admit Delivery Optimization'
+    }
+
+    It 'lets through only rules whose program and service admit the dosvc service' {
+        InModuleScope DoctorDO.Collector {
+            $r = { param($p, $s) @{ direction = 'Inbound'; action = 'Allow'; protocol = 'TCP'; localPort = '7680'; displayName = 'x'; program = $p; service = $s } }
+            Test-DDTcp7680Allow -Rule (& $r $null $null) | Should -BeTrue
+            Test-DDTcp7680Allow -Rule (& $r 'Any' 'Any') | Should -BeTrue
+            Test-DDTcp7680Allow -Rule (& $r '%SystemRoot%\system32\svchost.exe' 'dosvc') | Should -BeTrue
+            Test-DDTcp7680Allow -Rule (& $r 'C:\WINDOWS\System32\SVCHOST.EXE' '*') | Should -BeTrue -Because '* is any service'
+            Test-DDTcp7680Allow -Rule (& $r 'System' 'Any') | Should -BeFalse -Because 'the kernel is not DoSvc'
+            Test-DDTcp7680Allow -Rule (& $r 'C:\Tools\notsvchost.exe' 'Any') | Should -BeFalse
+            Test-DDTcp7680Allow -Rule (& $r 'Any' 'BITS') | Should -BeFalse
+            Test-DDTcp7680Allow -Rule (& $r 'C:\Tools\agent.exe' 'Any') -AnyProgram | Should -BeTrue
+        }
+    }
+
+    It 'says not collected instead of absent when Windows refused part of the listing (issue 1, not elevated)' {
+        Initialize-FakeDevice
+        Mock -ModuleName DoctorDO.Collector Get-DDFirewallRulesRaw {
+            $denied = [System.Management.Automation.ErrorRecord]::new([System.UnauthorizedAccessException]::new('Access is denied.'), 'HRESULT 0x80070005', 'PermissionDenied', $null)
+            , @([pscustomobject]@{ DisplayName = 'Delivery Optimization (TCP-In)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any'; Protocol = 'TCP'; LocalPort = '7680'; RemotePort = 'Any'
+                    RemoteAddress = @('Any'); PrimaryStatus = 'Inactive'; EnforcementStatus = @('LocalFirewallRulesNotAllowed'); Program = '%SystemRoot%\system32\svchost.exe'; Service = 'dosvc' },
+                [pscustomobject]@{ ReadRefused = 'the port filters'; Error = $denied })
+        }
+        $inv = Get-DOInventory -StatePath (Join-Path ([System.IO.Path]::GetTempPath()) ("dd-{0}.json" -f [guid]::NewGuid().ToString('N')))
+        $nc = $inv.notCollected | Where-Object field -eq 'firewallRules'
+        $nc.reason | Should -Be 'insufficient-rights'
+        $nc.detail | Should -Match 'the port filters'
+        @($inv.firewallRules).Count | Should -Be 1 -Because 'what was read is kept, without the refusal object'
+        $fw = $inv.connectivity | Where-Object checkId -eq 'p2p-firewall-rule'
+        $fw.result | Should -Be 'not-collected' -Because 'a custom-named rule in force could be among those not read'
+        $fw.code | Should -Be 'rules-unreadable'
+        $fw.detail | Should -Match "Delivery Optimization \(TCP-In\)', is enabled but its status is Inactive: the firewall policy ignores local rules"
+        $fw.detail | Should -Not -Match 'DO-NET-010'
+        ($inv.connectivity | Where-Object checkId -eq 'p2p-inbound').result | Should -Not -Be 'fail'
+        ($inv.connectivity | Where-Object checkId -eq 'p2p-outbound-rule').result | Should -Be 'not-collected'
+        ($inv.connectivity | Where-Object checkId -eq 'p2p-outbound-rule').code | Should -Be 'rules-unreadable'
+    }
+
+    It 'still passes on an in-force rule when the listing was incomplete, and still fails on a Block rule it read' {
+        Initialize-FakeDevice
+        Mock -ModuleName DoctorDO.Collector Get-DDFirewallRulesRaw {
+            $denied = [System.Management.Automation.ErrorRecord]::new([System.UnauthorizedAccessException]::new('Access is denied.'), 'HRESULT 0x80070005', 'PermissionDenied', $null)
+            , @([pscustomobject]@{ DisplayName = 'Delivery Optimization (TCP-In)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any'; Protocol = 'TCP'; LocalPort = '7680'; RemotePort = 'Any'
+                    RemoteAddress = @('Any'); PrimaryStatus = 'OK'; Program = $null; Service = 'dosvc' },
+                [pscustomobject]@{ ReadRefused = 'the port filters'; Error = $denied })
+        }
+        $fw = (Get-DOConnectivityMatrix) | Where-Object checkId -eq 'p2p-firewall-rule'
+        $fw.result | Should -Be 'pass'
+        $fw.detail | Should -Match 'a Block rule could be among those not read'
+        Mock -ModuleName DoctorDO.Collector Get-DDFirewallRulesRaw {
+            , @([pscustomobject]@{ DisplayName = 'Baseline: block inbound'; Direction = 'Inbound'; Action = 'Block'; Enabled = 'True'; Profile = 'Any'; Protocol = 'Any'; LocalPort = 'Any'; Program = $null; Service = $null },
+                [pscustomobject]@{ ReadRefused = 'the port filters'; Error = $null })
+        }
+        $x = (Get-DOConnectivityMatrix) | Where-Object checkId -eq 'p2p-firewall-rule'
+        $x.result | Should -Be 'fail' -Because 'a Block rule that was read is evidence, whatever was not read'
+        $x.code | Should -Be 'shadowed'
+    }
 }
 
 Describe 'TCP 7680 listener from DoSvc''s own TCP table' {

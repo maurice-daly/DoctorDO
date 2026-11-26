@@ -504,11 +504,21 @@ function ConvertFrom-DDFirewallRaw {
 }
 
 function Get-DDFirewallFacts {
+    # The firewall rules. When Windows refused part of the listing (Get-DDFirewallRulesRaw returns a ReadRefused object
+    # for each), 'firewallRules' is recorded as not collected: the rules read are kept, but they may be incomplete, and the
+    # checks then do not call a rule absent (Test-DDFirewallRulesComplete).
     [CmdletBinding()]
     param([Parameter(Mandatory)] $Context)
     $raw = Invoke-DDStep -Context $Context -Field 'firewallRules' -Script { Get-DDFirewallRulesRaw }
     if ($null -eq $raw) { return , @() }
-    ConvertFrom-DDFirewallRaw -Rules $raw -Context $Context
+    $refused = @(@($raw) | Where-Object { $null -ne $_ -and $null -ne (Get-DDProp $_ 'ReadRefused') })
+    if ($refused.Count -gt 0) {
+        $first = $refused[0].Error
+        $reason = $(if ($null -ne $first) { Get-DDNotCollectedReason -ErrorRecord $first } else { 'error' })
+        $why = $(if ($null -ne $first) { ': ' + ([string]$first.Exception.Message).Trim() } else { '' })
+        Add-DDNotCollected -Context $Context -Field 'firewallRules' -Reason $reason -Detail ("Windows refused part of the listing of {0}, so rules may be missing{1}" -f (@($refused | ForEach-Object { [string]$_.ReadRefused }) -join ', '), $why)
+    }
+    ConvertFrom-DDFirewallRaw -Rules @(@($raw) | Where-Object { $null -ne $_ -and $null -eq (Get-DDProp $_ 'ReadRefused') }) -Context $Context
 }
 
 function Get-DDCacheDriveName {

@@ -296,7 +296,7 @@ Describe 'Firewall rules as the device enforces them (NetSecurity cmdlets mocked
     It 'reads the active store, the program from the application filter and the service from the service filter' {
         if (-not (Get-Command -Name Get-NetFirewallRule -ErrorAction SilentlyContinue)) { Set-ItResult -Skipped -Because 'the NetSecurity module is Windows only'; return }
         Mock -ModuleName DoctorDO.Collector Get-NetFirewallRule {
-            if ($PesterBoundParameters.ContainsKey('DisplayName')) { @([pscustomobject]@{ InstanceID = 'r1'; DisplayName = 'Delivery Optimization (TCP-In)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any' }) }
+            if ($PesterBoundParameters.ContainsKey('DisplayName') -or $PesterBoundParameters.ContainsKey('Name')) { @([pscustomobject]@{ InstanceID = 'r1'; DisplayName = 'Delivery Optimization (TCP-In)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any' }) }
             else { @([pscustomobject]@{ InstanceID = 'b1'; DisplayName = 'Baseline: block 7680'; Direction = 'Inbound'; Action = 'Block'; Enabled = 'True'; Profile = 'Public' }) }
         } -ParameterFilter { $PolicyStore -eq 'ActiveStore' }
         Mock -ModuleName DoctorDO.Collector Get-NetFirewallPortFilter { [pscustomobject]@{ Protocol = 'TCP'; LocalPort = @('7680') } } -RemoveParameterType AssociatedNetFirewallRule
@@ -307,7 +307,65 @@ Describe 'Firewall rules as the device enforces them (NetSecurity cmdlets mocked
         $r.Count | Should -Be 2
         @($r | Where-Object DisplayName -like 'Delivery*')[0].Service | Should -Be 'dosvc'
         @($r | Where-Object DisplayName -like 'Delivery*')[0].Program | Should -Be '%SystemRoot%\system32\svchost.exe'
-        Should -Invoke -ModuleName DoctorDO.Collector Get-NetFirewallRule -ParameterFilter { $PolicyStore -eq 'ActiveStore' } -Times 2 -Exactly
+        # By Name and by display name, then the inbound Block rules (the filter here has no ID, so no lookup behind it).
+        Should -Invoke -ModuleName DoctorDO.Collector Get-NetFirewallRule -ParameterFilter { $PolicyStore -eq 'ActiveStore' } -Times 3 -Exactly
+        @($r | Where-Object { $null -ne $_.PSObject.Properties['ReadRefused'] }).Count | Should -Be 0 -Because 'nothing was refused'
+    }
+
+    It 'returns what it read plus one ReadRefused object for a listing Windows refused, and none for a filter that matches nothing' {
+        if (-not (Get-Command -Name Get-NetFirewallRule -ErrorAction SilentlyContinue)) { Set-ItResult -Skipped -Because 'the NetSecurity module is Windows only'; return }
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallRule {
+            if ($PesterBoundParameters.ContainsKey('DisplayName')) { @([pscustomobject]@{ InstanceID = 'r1'; DisplayName = 'Delivery Optimization (TCP-In)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any' }) }
+            else { Write-Error -Message 'No matching MSFT_NetFirewallRule objects found by CIM query' -Category ObjectNotFound }
+        } -ParameterFilter { $PolicyStore -eq 'ActiveStore' }
+        # Without elevation: what can be read comes back, with one "Access is denied" error.
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallPortFilter {
+            if ($PesterBoundParameters.ContainsKey('PolicyStore')) {
+                [pscustomobject]@{ Protocol = 'UDP'; LocalPort = @('5353') }
+                Write-Error -Message 'Access is denied.' -Category PermissionDenied
+            } else { [pscustomobject]@{ Protocol = 'TCP'; LocalPort = @('7680') } }
+        } -RemoveParameterType AssociatedNetFirewallRule
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallApplicationFilter { [pscustomobject]@{ Program = '%SystemRoot%\system32\svchost.exe' } } -RemoveParameterType AssociatedNetFirewallRule
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallServiceFilter { [pscustomobject]@{ Service = 'dosvc' } } -RemoveParameterType AssociatedNetFirewallRule
+        $r = @(InModuleScope DoctorDO.Collector { Get-DDFirewallRulesRaw } | ForEach-Object { $_ })
+        @($r | Where-Object DisplayName -eq 'Delivery Optimization (TCP-In)').Count | Should -Be 1
+        $refused = @($r | Where-Object { $null -ne $_.PSObject.Properties['ReadRefused'] })
+        $refused.Count | Should -Be 1 -Because 'the empty Block-rule query is ObjectNotFound, not a refusal'
+        $refused[0].ReadRefused | Should -Be 'the port filters'
+        $refused[0].Error.Exception.Message | Should -Match 'Access is denied'
+    }
+
+    It 'finds the built-in rule on a non-English Windows by its Name, and takes every status from the active store (issue 1)' {
+        if (-not (Get-Command -Name Get-NetFirewallRule -ErrorAction SilentlyContinue)) { Set-ItResult -Skipped -Because 'the NetSecurity module is Windows only'; return }
+        # German Windows: the display name is translated, so the English display-name query finds nothing. Local rule
+        # merging is off: the built-in rule is Inactive in the active store. A custom Intune rule, found only by its port
+        # filter, is in force.
+        $builtIn = [pscustomobject]@{ InstanceID = 'DeliveryOptimization-TCP-In'; Name = 'DeliveryOptimization-TCP-In'; DisplayName = 'Uebermittlungsoptimierung (TCP eingehend)'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any'
+            PrimaryStatus = 'Inactive'; EnforcementStatus = @('LocalFirewallRulesNotAllowed') }
+        $intune = [pscustomobject]@{ InstanceID = '{6f1e2d3c-0000-4000-8000-00000000c0de}'; Name = '{6f1e2d3c-0000-4000-8000-00000000c0de}'; DisplayName = 'Contoso - DO peers'; Direction = 'Inbound'; Action = 'Allow'; Enabled = 'True'; Profile = 'Any'
+            PrimaryStatus = 'OK'; EnforcementStatus = @('NotApplicable') }
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallRule {
+            if ($PesterBoundParameters.ContainsKey('DisplayName')) { return }
+            if ($PesterBoundParameters.ContainsKey('Name')) {
+                if (@($Name) -contains 'DeliveryOptimization*' -or @($Name) -contains 'DeliveryOptimization-TCP-In') { return $builtIn }
+                if (@($Name) -contains '{6f1e2d3c-0000-4000-8000-00000000c0de}') { return $intune }
+                return
+            }
+            Write-Error -Message 'No matching MSFT_NetFirewallRule objects found by CIM query' -Category ObjectNotFound
+        } -ParameterFilter { $PolicyStore -eq 'ActiveStore' }
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallPortFilter {
+            if ($PesterBoundParameters.ContainsKey('PolicyStore')) {
+                [pscustomobject]@{ InstanceID = 'DeliveryOptimization-TCP-In'; Protocol = 'TCP'; LocalPort = @('7680') }
+                [pscustomobject]@{ InstanceID = '{6f1e2d3c-0000-4000-8000-00000000c0de}'; Protocol = 'TCP'; LocalPort = @('7680') }
+            } else { [pscustomobject]@{ Protocol = 'TCP'; LocalPort = @('7680') } }
+        } -RemoveParameterType AssociatedNetFirewallRule
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallApplicationFilter { [pscustomobject]@{ Program = '%SystemRoot%\system32\svchost.exe' } } -RemoveParameterType AssociatedNetFirewallRule
+        Mock -ModuleName DoctorDO.Collector Get-NetFirewallServiceFilter { [pscustomobject]@{ Service = 'dosvc' } } -RemoveParameterType AssociatedNetFirewallRule
+        $r = @(InModuleScope DoctorDO.Collector { Get-DDFirewallRulesRaw } | ForEach-Object { $_ } | Where-Object { $null -eq $_.PSObject.Properties['ReadRefused'] })
+        $r.Count | Should -Be 2
+        ($r | Where-Object DisplayName -like 'Uebermittlung*').PrimaryStatus | Should -Be 'Inactive' -Because 'the active store says so; the stored rule behind the filter would say OK'
+        ($r | Where-Object DisplayName -eq 'Contoso - DO peers').PrimaryStatus | Should -Be 'OK'
+        Should -Invoke -ModuleName DoctorDO.Collector Get-NetFirewallRule -ParameterFilter { $PolicyStore -ne 'ActiveStore' } -Times 0 -Exactly -Because 'a rule is never read outside the active store'
     }
 }
 

@@ -71,12 +71,47 @@ function Get-DDRemoteScope {
 function Test-DDTcp7680Allow {
     # An inbound Allow rule for Delivery Optimization's TCP port: named for DO, bound to the dosvc service, or a TCP (or
     # any-protocol) rule whose local port names 7680. A UDP-only rule does not admit TCP 7680.
+    # Delivery Optimization is the dosvc service in svchost.exe, so a rule limited to another program or another service
+    # does not admit it, whatever its port: such a rule counts only with -AnyProgram (to name it in a finding).
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param([Parameter(Mandatory)] $Rule, [switch] $AnyProgram)
+    if ($Rule['direction'] -ne 'Inbound' -or $Rule['action'] -ne 'Allow') { return $false }
+    if ([string]$Rule['protocol'] -notmatch $script:DDFirewallTcp) { return $false }
+    if (-not $AnyProgram -and -not (Test-DDAdmitsDoSvc -Rule $Rule)) { return $false }
+    ([string]$Rule['displayName'] -match '(?i)Delivery Optimization') -or ([string]$Rule['service'] -match '(?i)^dosvc$') -or (Test-DDPortSpec -Spec ([string]$Rule['localPort']) -Port 7680)
+}
+
+function Test-DDAdmitsDoSvc {
+    # Whether a rule's program and service conditions let the dosvc service (svchost.exe) through: each is unset, Any, or
+    # names it. A service condition of * means "any service", which includes dosvc.
     [CmdletBinding()]
     [OutputType([bool])]
     param([Parameter(Mandatory)] $Rule)
-    if ($Rule['direction'] -ne 'Inbound' -or $Rule['action'] -ne 'Allow') { return $false }
-    if ([string]$Rule['protocol'] -notmatch $script:DDFirewallTcp) { return $false }
-    ([string]$Rule['displayName'] -match '(?i)Delivery Optimization') -or ([string]$Rule['service'] -match '(?i)^dosvc$') -or (Test-DDPortSpec -Spec ([string]$Rule['localPort']) -Port 7680)
+    $program = [string](Get-DDProp $Rule 'program')
+    $service = [string](Get-DDProp $Rule 'service')
+    if ($program -and $program -notmatch '^(?i)any$' -and $program -notmatch '(?i)(^|\\)svchost\.exe$') { return $false }
+    -not ($service -and $service -notmatch '^(?i)(any|\*|dosvc)$')
+}
+
+function Get-DDScopeText {
+    # What a rule is limited to, in words, for a rule Test-DDAdmitsDoSvc refuses.
+    [CmdletBinding()]
+    [OutputType([string])]
+    param([Parameter(Mandatory)] $Rule)
+    $program = [string](Get-DDProp $Rule 'program')
+    if ($program -and $program -notmatch '^(?i)any$' -and $program -notmatch '(?i)(^|\\)svchost\.exe$') { return "the program $([System.IO.Path]::GetFileName($program))" }
+    "the service $([string](Get-DDProp $Rule 'service'))"
+}
+
+function Test-DDFirewallRulesComplete {
+    # Whether the firewall rules were read in full: Get-DDFirewallFacts records 'firewallRules' as not collected when
+    # Windows refused part of the listing (or all of it). Without the full list a rule that is not in it is unknown.
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param($Context)
+    if ($null -eq $Context) { return $true }
+    -not (@($Context.NotCollected | Where-Object { $_['field'] -eq 'firewallRules' }).Count -gt 0)
 }
 
 function Get-DDEnforcementText {
@@ -468,7 +503,10 @@ function New-DDHealthChecks {
     [CmdletBinding()]
     param(
         $DoEffective, $Network, [AllowEmptyCollection()] $FirewallRules = @(), $Geo, $CacheHost, $Dhcp, $CacheFolder,
-        $Vitals, [AllowNull()][string] $PowerPlan, $ModeNum, [switch] $SkipProbes, [bool] $BatteryCollected = $true
+        $Vitals, [AllowNull()][string] $PowerPlan, $ModeNum, [switch] $SkipProbes, [bool] $BatteryCollected = $true,
+        # False when Windows refused part of the firewall listing (Test-DDFirewallRulesComplete): no Block rule found then
+        # proves nothing.
+        [bool] $FirewallRulesComplete = $true
     )
     $checks = New-Object 'System.Collections.Generic.List[object]'
     $add = { param($id, $target, $proto, $port, $result, $detail, $code, $evidence) $c = New-DDCheck -CheckId $id -Target $target -Protocol $proto -Port $port -Result $result -Detail $detail -Evidence $evidence; if ($code) { $c['code'] = $code }; $checks.Add($c) }
@@ -567,6 +605,7 @@ function New-DDHealthChecks {
     # Outbound blocks: TCP 7680 to peers, UDP 3544 to the Teredo server
     $out7680 = @(Get-DDOutboundBlocks -Rules $rules -Port 7680 -Protocol TCP)
     if ($peeringOff) { & $add 'p2p-outbound-rule' 'local' 'local' 7680 'not-applicable' "Peering is disabled by $modeText" 'not-needed' $null }
+    elseif ($out7680.Count -eq 0 -and -not $FirewallRulesComplete) { & $add 'p2p-outbound-rule' 'local' 'local' 7680 'not-collected' 'Windows refused to list every firewall rule (run it elevated), so an outbound Block rule for TCP 7680 could be among those not read' 'rules-unreadable' $null }
     elseif ($out7680.Count -eq 0) { & $add 'p2p-outbound-rule' 'local' 'local' 7680 'pass' 'No enabled outbound Block rule names TCP 7680' 'none' $null }
     else {
         $live = @($out7680 | Where-Object { $null -eq (Get-DDProp $_ 'primaryStatus') -or (Get-DDProp $_ 'primaryStatus') -eq 'OK' })
@@ -575,6 +614,7 @@ function New-DDHealthChecks {
     }
     $out3544 = @(Get-DDOutboundBlocks -Rules $rules -Port 3544 -Protocol UDP)
     if (-not ($ModeNum -in 2, 3)) { & $add 'teredo-outbound-rule' 'local' 'local' 3544 'not-applicable' "Teredo is only needed for Group or Internet mode ($modeText)" 'not-needed' $null }
+    elseif ($out3544.Count -eq 0 -and -not $FirewallRulesComplete) { & $add 'teredo-outbound-rule' 'local' 'local' 3544 'not-collected' 'Windows refused to list every firewall rule (run it elevated), so an outbound Block rule for UDP 3544 could be among those not read' 'rules-unreadable' $null }
     elseif ($out3544.Count -eq 0) { & $add 'teredo-outbound-rule' 'local' 'local' 3544 'pass' 'No enabled outbound Block rule names UDP 3544' 'none' $null }
     else {
         $live = @($out3544 | Where-Object { $null -eq (Get-DDProp $_ 'primaryStatus') -or (Get-DDProp $_ 'primaryStatus') -eq 'OK' })

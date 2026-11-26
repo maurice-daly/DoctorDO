@@ -28,7 +28,7 @@
 .PARAMETER ModuleName
     The module to look for. Default DoctorDO.Collector.
 .PARAMETER MinimumVersion
-    The oldest installed version that counts. Default 1.2.1; keep it equal to the remediation script's.
+    The oldest installed version that counts. Default 1.2.2; keep it equal to the remediation script's.
 .PARAMETER ModulesPath
     The module folder to look in. Default: the 64-bit %ProgramFiles%\WindowsPowerShell\Modules (also from a 32-bit host).
 .PARAMETER LogPath
@@ -39,7 +39,7 @@ param(
     [ValidateRange(1, 720)][int] $MaxAgeHours = 22,
     [string] $RegistryPath = 'HKLM:\SOFTWARE\DoctorDO',
     [ValidatePattern('^[A-Za-z0-9._-]+$')][string] $ModuleName = 'DoctorDO.Collector',
-    [string] $MinimumVersion = '1.2.1',
+    [string] $MinimumVersion = '1.2.2',
     [string] $ModulesPath = '',
     [string] $LogPath = ''
 )

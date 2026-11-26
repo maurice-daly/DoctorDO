@@ -255,14 +255,14 @@ Remediation scripts take no arguments in Intune, so settings live in the script 
 | `-Repository` | script parameter (edit default) | `PSGallery` | the registered PowerShell repository to install from; an internal one works. Its trust setting is never changed |
 | `-UpdatePolicy` | script parameter (edit default) | `LatestVerified` | `LatestVerified` or `Pinned`, as above |
 | `-UpdateCheckHours` | script parameter (edit default) | `24` | `LatestVerified` searches the repository at most this often while a usable version is installed; `0` searches every run |
-| `-MinimumVersion` | script parameter (edit default) | `1.2.1` | the oldest version that may run; older ones are replaced (`LatestVerified`) |
+| `-MinimumVersion` | script parameter (edit default) | `1.2.2` | the oldest version that may run; older ones are replaced (`LatestVerified`) |
 | `-MaximumVersion` | script parameter (edit default) | empty | a cap on what is installed and used (`LatestVerified`) |
 | `-GitHubOwner`, `-GitHubRepo` | script parameters (edit defaults) | `maurice-daly`, `doctordo` | fill `{owner}` and `{repo}` in the manifest URL |
 | `-ManifestUrlTemplate` | script parameter (edit default) | `https://github.com/{owner}/{repo}/releases/download/collector-v{version}/collector-manifest.json` | where the release's hash list is downloaded from; https only |
 | `-ExpectedSignerThumbprint` | script parameter (edit default) | empty | when set, every script and manifest of the module must have a `Valid` signature by this certificate |
 | `-ModulesPath`, `-LogPath` | script parameters | the 64-bit AllUsers folder; the log below | for testing |
 | `-MaxJitterSeconds` | script parameter (edit default) | 600 | random start delay 0..N s so a fleet on one schedule does not arrive in the same second |
-| `-MinimumVersion` | `Detect-DoctorDO.ps1` | `1.2.1` | keep equal to the remediation's: below it the detection exits 1 |
+| `-MinimumVersion` | `Detect-DoctorDO.ps1` | `1.2.2` | keep equal to the remediation's: below it the detection exits 1 |
 | `-MaxAgeHours` | `Detect-DoctorDO.ps1` | 22 | freshness window: shorter than the schedule's interval (22 for daily, 160 for weekly). Intune runs detection about one interval after the last collection, so a window as long as the interval (26 was the old default) finds yesterday's collection fresh and a daily schedule collects only every other day |
 
 The remediation calls `Invoke-DoctorDOCollector -Fleet -IngestUri <uri> -DeviceAnchor <anchor>`: anonymisation is on by

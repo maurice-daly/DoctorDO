@@ -829,19 +829,31 @@ function Get-DDFirewallRulesRaw {
         The firewall rules that decide Delivery Optimization's ports, from the active store (local, Group Policy and MDM
         merged; local rules drop out when policy turns off local rule merging), so "present" means "in force".
     .DESCRIPTION
-        * the built-in 'Delivery Optimization*' rules, and every inbound rule whose port filter names TCP 7680, whatever its
-          display name (Intune and Group Policy rules are often custom-named);
+        * the built-in Delivery Optimization rules (by Name, which is not translated), rules whose display name starts
+          'Delivery Optimization', and every inbound rule whose port filter names TCP 7680, whatever its display name
+          (Intune and Group Policy rules are often custom-named);
         * enabled inbound Block rules whose local port could shadow 7680 (Any or 7680);
         * enabled outbound Block rules that name TCP 7680 (connections to peers) or UDP 3544 (Teredo);
         * enabled Block rules that name UDP 67 or 68 (the DHCP client, which options 234 and 235 arrive through).
         Each with its PrimaryStatus and its remote address condition. The remote addresses are read here only so the
         mapper (ConvertFrom-DDFirewallRaw) can reduce them to a category and a count; they are never stored or sent.
+        Windows can refuse part of a listing: without administrator rights the port-filter listing returns what it can
+        and one "Access is denied" error (seen on Windows 11, 26 Nov 2026), and a standard user may be refused more. Each
+        refused listing is returned as one more object, with ReadRefused (which listing) and Error, so the caller can
+        record the rules as incomplete: a rule missing from them is then unknown, not absent. A filter that matches
+        nothing (ObjectNotFound) is not a refusal.
         NetSecurity cmdlets: https://learn.microsoft.com/powershell/module/netsecurity/get-netfirewallrule
     #>
     [CmdletBinding()]
     param()
     $res = New-Object 'System.Collections.Generic.List[object]'
     $seen = New-Object 'System.Collections.Generic.HashSet[string]'
+    $refusals = New-Object 'System.Collections.Generic.List[object]'
+    $note = {
+        param([string] $What, $Errors)
+        $e = @(@($Errors) | Where-Object { $null -ne $_ -and [string]$_.CategoryInfo.Category -ne 'ObjectNotFound' })
+        if ($e.Count -gt 0) { $refusals.Add([pscustomobject]@{ ReadRefused = $What; Error = $e[0] }) }
+    }
     $add = {
         param($rule)
         if ($null -eq $rule -or -not $seen.Add([string]$rule.InstanceID)) { return }
@@ -865,17 +877,31 @@ function Get-DDFirewallRulesRaw {
     }
     $tcp = '^(?i)(TCP|6|Any|)$'
     $udp = '^(?i)(UDP|17|Any|)$'
-    foreach ($r in @(Get-NetFirewallRule -PolicyStore ActiveStore -DisplayName 'Delivery Optimization*' -ErrorAction SilentlyContinue)) { & $add $r }
+    # The built-in rules by their language-neutral Name (DeliveryOptimization-TCP-In, -UDP-In): the display name is
+    # translated on a non-English Windows ("Delivery Optimization (TCP-In)" only in English). Custom rules by display name.
+    $named = @(Get-NetFirewallRule -PolicyStore ActiveStore -Name 'DeliveryOptimization*' -ErrorAction SilentlyContinue -ErrorVariable builtInErr) +
+        @(Get-NetFirewallRule -PolicyStore ActiveStore -DisplayName 'Delivery Optimization*' -ErrorAction SilentlyContinue -ErrorVariable namedErr)
+    & $note 'the Delivery Optimization rules' (@($builtInErr) + @($namedErr))
+    foreach ($r in $named) { & $add $r }
     # Port filters first (far fewer calls than reading each rule's filter): the ones that name a port Delivery Optimization
     # or the DHCP client uses, then the rule behind each.
-    foreach ($pf in @(Get-NetFirewallPortFilter -PolicyStore ActiveStore -ErrorAction SilentlyContinue)) {
+    $filters = @(Get-NetFirewallPortFilter -PolicyStore ActiveStore -ErrorAction SilentlyContinue -ErrorVariable filterErr)
+    & $note 'the port filters' $filterErr
+    foreach ($pf in $filters) {
         $proto = [string]$pf.Protocol
         $lp = (@(Get-DDProp $pf 'LocalPort') -join ','); $rp = (@(Get-DDProp $pf 'RemotePort') -join ',')
         $names = { param($p) (Test-DDPortSpec -Spec $lp -Port $p) -or (Test-DDPortSpec -Spec $rp -Port $p) }
         $hit = ($proto -match $tcp -and ((Test-DDPortSpec -Spec $lp -Port 7680) -or (Test-DDPortSpec -Spec $rp -Port 7680))) -or
             ($proto -match $udp -and ((& $names 3544) -or (& $names 67) -or (& $names 68)))
         if (-not $hit) { continue }
-        foreach ($r in @($pf | Get-NetFirewallRule -ErrorAction SilentlyContinue)) {
+        # The rule behind the filter, read from the active store by its ID. Piping the filter to Get-NetFirewallRule
+        # returns the stored rule, whose PrimaryStatus is OK even when policy keeps it out of force (a local rule while
+        # local rule merging is off: Inactive in the active store, OK through its filter; Windows 11, 26 Nov 2026). On a
+        # non-English Windows the built-in rule was found only this way, so it counted as in force (issue 1). A filter
+        # whose rule is not in the active store is not in force, and is left out.
+        $id = [string](Get-DDProp $pf 'InstanceID')
+        $behind = $(if ($id) { @(Get-NetFirewallRule -PolicyStore ActiveStore -Name ([System.Management.Automation.WildcardPattern]::Escape($id)) -ErrorAction SilentlyContinue) } else { @() })
+        foreach ($r in $behind) {
             $inbound = [string]$r.Direction -match '(?i)^in'
             $block = [string]$r.Action -match '(?i)block'
             $on = [string]$r.Enabled -match '(?i)^(true|1)$'
@@ -883,12 +909,14 @@ function Get-DDFirewallRulesRaw {
             if (($inbound -and -not $block -and $proto -match $tcp -and (Test-DDPortSpec -Spec $lp -Port 7680)) -or ($block -and $on)) { & $add $r }
         }
     }
-    foreach ($r in @(Get-NetFirewallRule -PolicyStore ActiveStore -Direction Inbound -Action Block -Enabled True -ErrorAction SilentlyContinue)) {
+    $blocks = @(Get-NetFirewallRule -PolicyStore ActiveStore -Direction Inbound -Action Block -Enabled True -ErrorAction SilentlyContinue -ErrorVariable blockErr)
+    & $note 'the inbound Block rules' $blockErr
+    foreach ($r in $blocks) {
         $pf = $r | Get-NetFirewallPortFilter -ErrorAction SilentlyContinue
         $lp = if ($pf) { (@($pf.LocalPort) -join ',') } else { 'Any' }
         if ($lp -match '(?i)(^|,)Any(,|$)' -or (Test-DDPortSpec -Spec $lp -Port 7680)) { & $add $r }
     }
-    , $res.ToArray()
+    , ($res.ToArray() + $refusals.ToArray())
 }
 
 function Get-DDFirewallProfilesRaw {

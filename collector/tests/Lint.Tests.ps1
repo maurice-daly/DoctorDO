@@ -70,7 +70,7 @@ Describe 'Module manifest' {
     It 'is valid, exports exactly the Public functions, and agrees on the version' {
         $psd1 = Join-Path $script:Root 'DoctorDO.Collector/DoctorDO.Collector.psd1'
         $m = Test-ModuleManifest -Path $psd1
-        $m.Version.ToString() | Should -Be '1.2.1'
+        $m.Version.ToString() | Should -Be '1.2.2'
         $public = Get-ChildItem (Join-Path $script:Root 'DoctorDO.Collector/Public') -Filter *.ps1 | ForEach-Object { $_.BaseName }
         ($m.ExportedFunctions.Keys | Sort-Object) | Should -Be ($public | Sort-Object)
         # The version the collector reports in its data (collector.version) is the manifest's.
