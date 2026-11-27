@@ -169,8 +169,8 @@ compaction on the same inputs and requires byte-identical output, and every repo
 
 `DoctorDO/` holds the short name `DoctorDO` on the PowerShell Gallery, so anyone who types `Install-Module DoctorDO` gets
 the collector. It is a manifest with no code: `RequiredModules` names `DoctorDO.Collector` by its GUID, so installing
-`DoctorDO` installs the collector and importing it loads the collector's commands. It exports nothing itself. A new collector
-version needs no new `DoctorDO` version, because `Install-Module` installs the collector's newest version.
+`DoctorDO` installs the collector and importing it loads the collector's commands. It exports nothing itself. Each collector
+release has a `DoctorDO` release of the same version that requires it, so `Update-Module DoctorDO` brings the new collector.
 `tests/NameModule.Tests.ps1` keeps it pointing at the collector.
 
 ## How it works

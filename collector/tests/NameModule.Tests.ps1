@@ -8,12 +8,18 @@ BeforeAll {
 }
 
 Describe 'The DoctorDO name module' {
-    It 'requires DoctorDO.Collector by its GUID, at a version the collector has reached' {
+    It 'requires DoctorDO.Collector by its GUID, at the collector''s version' {
         $req = @($script:Name.RequiredModules)
         $req | Should -HaveCount 1
         $req[0].ModuleName | Should -Be 'DoctorDO.Collector'
         $req[0].GUID | Should -Be $script:Collector.GUID
-        [version]$req[0].ModuleVersion | Should -BeLessOrEqual ([version]$script:Collector.ModuleVersion)
+        # The floor is the collector release DoctorDO goes out with, so installing or updating DoctorDO brings it.
+        $req[0].ModuleVersion | Should -Be $script:Collector.ModuleVersion
+    }
+
+    It 'has the collector''s version, so each collector release has a DoctorDO release (27 Nov 2026)' {
+        # Update-Module DoctorDO only looks for a newer DoctorDO: one that stayed at 1.0.0 never brought a newer collector.
+        $script:Name.ModuleVersion | Should -Be $script:Collector.ModuleVersion
     }
 
     It 'has no code and exports nothing of its own' {
