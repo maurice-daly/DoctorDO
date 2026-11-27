@@ -6,7 +6,7 @@ Set-StrictMode -Version Latest
 try { Add-Type -Verbose:$false -AssemblyName System.Numerics -ErrorAction Stop } catch { Write-Verbose "System.Numerics already loaded: $($_.Exception.Message)" }
 
 $script:ModuleRoot = $PSScriptRoot
-$script:CollectorVersion = '1.2.2'
+$script:CollectorVersion = '1.2.3'
 foreach ($dir in 'Private', 'Public') {
     $path = Join-Path -Path $PSScriptRoot -ChildPath $dir
     if (Test-Path -LiteralPath $path) {

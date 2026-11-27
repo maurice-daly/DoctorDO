@@ -374,8 +374,27 @@ Describe 'Inbound rules for TCP 7680: by port, in force, and scoped' {
         $fw.result | Should -Be 'fail'
         $fw.code | Should -Be 'not-in-force'
         $fw.detail | Should -Match 'local rule merging is off'
+        $fw.detail | Should -Not -Match 'profile' -Because 'a rule for every profile covers the active one: ProfileInactive there means its other profiles (OpenIntuneBaseline issue 275)'
         $fw.detail | Should -Match 'DO-NET-019'
         ($m | Where-Object checkId -eq 'p2p-inbound').result | Should -Be 'fail'
+    }
+
+    It 'says a profile is not active only when that is why the rule is out of force (OpenIntuneBaseline issue 275)' {
+        InModuleScope DoctorDO.Collector {
+            $merge = 'the firewall policy ignores local rules (local rule merging is off) and this is one'
+            # What Windows 11 reported on 27 Nov 2026 with local rules allowed on Domain and Private, not on Public, on a Public network.
+            Get-DDEnforcementText -Rule @{ profiles = @('Domain', 'Private', 'Public'); enforcementStatus = @('LocalFirewallRulesNotAllowed', 'ProfileInactive') } | Should -Be ": $merge"
+            Get-DDEnforcementText -Rule @{ profiles = @('Public'); enforcementStatus = @('LocalFirewallRulesNotAllowed') } | Should -Be ": $merge"
+            Get-DDEnforcementText -Rule @{ profiles = @('Domain', 'Private'); enforcementStatus = @('ProfileInactive') } | Should -Be ': none of its profiles (Domain, Private) is the active one'
+            Get-DDEnforcementText -Rule @{ profiles = @('Domain'); enforcementStatus = @('ProfileInactive') } | Should -Be ': its profile (Domain) is not the active one'
+            # Set for only some profiles, with another reason: which profile is active is not known, so it is hedged.
+            Get-DDEnforcementText -Rule @{ profiles = @('Private', 'Public'); enforcementStatus = @('LocalFirewallRulesNotAllowed', 'ProfileInactive') } |
+                Should -Be ": $merge; not all of its profiles (Private, Public) are active"
+            # A report without the rule's profiles.
+            Get-DDEnforcementText -Rule @{ enforcementStatus = @('ProfileInactive') } | Should -Be ': its profile is not the active one'
+            Get-DDEnforcementText -Rule @{ enforcementStatus = @('LocalFirewallRulesNotAllowed', 'ProfileInactive') } | Should -Be ": $merge; not all of its profiles are active"
+            Get-DDEnforcementText -Rule @{ profiles = @('Domain', 'Private', 'Public') } | Should -Be ''
+        }
     }
 
     It 'fails outbound blocks on TCP 7680 and, in Group mode, UDP 3544' {

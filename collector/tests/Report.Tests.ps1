@@ -114,7 +114,7 @@ Describe 'New-DoctorDODeviceReport (the offline device report, ADR-0039)' {
     It 'with -Verbose, prints a header, one aligned line per step and a summary, naming no host' {
         $lines = @(New-DoctorDODeviceReport -OutputPath $script:Out -Verbose -InformationAction SilentlyContinue 4>&1 |
                 Where-Object { $_ -is [System.Management.Automation.VerboseRecord] } | ForEach-Object { $_.Message })
-        $lines[0] | Should -Be 'DoctorDO.Collector 1.2.2 - New-DoctorDODeviceReport'
+        $lines[0] | Should -Be 'DoctorDO.Collector 1.2.3 - New-DoctorDODeviceReport'
         $lines[1] | Should -Match '^PowerShell \S+ \((Core|Desktop)\), (elevated|not elevated|running as SYSTEM), started \d{4}-\d\d-\d\d \d\d:\d\d:\d\d UTC$'
         $steps = @($lines | Where-Object { $_ -match '^\[' })
         foreach ($s in $steps) { $s | Should -Match '^\[ *\d+\.\ds\] .+ \.{2,} .+$' }

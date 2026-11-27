@@ -14,7 +14,7 @@ function Get-DDCollectorVersion {
     [CmdletBinding()]
     param()
     if ($null -ne (Get-Variable -Name CollectorVersion -Scope Script -ErrorAction SilentlyContinue)) { return $script:CollectorVersion }
-    '1.2.2'
+    '1.2.3'
 }
 
 function Get-DDTenantSalt {

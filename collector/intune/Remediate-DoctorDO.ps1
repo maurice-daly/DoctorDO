@@ -72,7 +72,7 @@
 .PARAMETER UpdatePolicy
     LatestVerified (default) or Pinned, as above.
 .PARAMETER MinimumVersion
-    The oldest version that may run. Default 1.2.2. With LatestVerified a version below it is replaced; with Pinned the
+    The oldest version that may run. Default 1.2.3. With LatestVerified a version below it is replaced; with Pinned the
     stamped version is the requirement and this is not used.
 .PARAMETER MaximumVersion
     Optional cap for LatestVerified: do not install or use anything newer. Empty (default) for no cap.
@@ -115,7 +115,7 @@ param(
     # LatestVerified looks for a newer version in -Repository at most this often while a version that meets the minimum is
     # installed (0: every run). The time of the last successful look is kept in HKLM:\SOFTWARE\DoctorDO.
     [ValidateRange(0, 720)][int] $UpdateCheckHours = 24,
-    [string] $MinimumVersion = '1.2.2',
+    [string] $MinimumVersion = '1.2.3',
     [string] $MaximumVersion = '',
     [string] $GitHubOwner = 'maurice-daly',
     [string] $GitHubRepo = 'doctordo',
@@ -144,17 +144,17 @@ $ConfiguredCollectPublicEgress = $false
 $DoctorDOExpectedGuid = '6f0d2a7e-3c5b-4e8a-9b1d-7a2c4e6f8b10'
 $DoctorDOExpectedAuthor = 'Maurice Daly'
 $DoctorDOExpectedFunctions = @('Get-DOConnectivityMatrix', 'Get-DOInventory', 'Get-DOTelemetry', 'Invoke-DoctorDOCollector', 'New-DoctorDODeviceReport', 'Send-DoctorDOReport', 'Test-DOConnectivity')
-$DoctorDOPinnedVersion = '1.2.2'
+$DoctorDOPinnedVersion = '1.2.3'
 $DoctorDOPinnedFiles = [ordered]@{
     'Data/device-report.html' = '2fa4298c17f209dbb60c1761f09b86d9d7f249dfda5e1961427ecf5879bc3edd'
     'Data/endpoints.json' = '16e669ea016790177e37f62ff9d7d01e1b0231fac0a441b7b09847b9fd35967c'
     'Data/redaction-profile.json' = '5f9d48524d3902f7f739654397ce5b87cf293a5caee8c0164eb1c744dd9a5fb7'
     'DoctorDO.Collector.format.ps1xml' = '77f5d0cd91d3e12f1fe8f9da732dea69778b4a56ad9a38335277f3def4401bad'
-    'DoctorDO.Collector.psd1' = 'fc0e90de1ec4e75e980b2cf79a8bf37f4e6fb79a132c5bd657e6676b2403c8c7'
-    'DoctorDO.Collector.psm1' = 'f0db1e57d41b15cacd3906f3f190578bee37dc223c5157c4ea92ba6e1f8b8250'
+    'DoctorDO.Collector.psd1' = 'edc6ecc94aaa94737122935c4663884ea35a663c8b9478420a9319db52a7ad93'
+    'DoctorDO.Collector.psm1' = 'f4ffb6d048124c4883bd40093c0a746b86fa8ad9ac73b6fb5b029c1fea059b2f'
     'LICENSE' = 'f09acf271009e72367046b49b22aa1332794011a51b4c170b2f76c26a140ccb0'
     'Private/Bundle.ps1' = 'c1cafcb677a1fb113290d477dad7dc9936fb0e8cf27532b36a2b990cd5e9d12e'
-    'Private/Collect.ps1' = 'b3a7a6c952e75ebc909f72eb6e44c270943a4766a55b9e8aa2d5d03e6faaf2bf'
+    'Private/Collect.ps1' = 'c553e24df921418b3051c84174b83bd8657529e5342c6689ece1db98f86da29d'
     'Private/Compact.ps1' = '2b2d1e3b61e7ed86582b691852afbd0307feb4fe2671accd541c4cb5a08a2500'
     'Private/Connectivity.ps1' = '6d5c0c7ae903e1b4128dce6a72151436d4d5a2f72bb6f36db9ba4e2ec5605dcd'
     'Private/Console.ps1' = '6d732bf152f48842c31e7282f531b7f22d90e7ebb350b92044483bf3bc85dfb2'
@@ -163,7 +163,7 @@ $DoctorDOPinnedFiles = [ordered]@{
     'Private/DoData.ps1' = '0470cfe7bd89fee2d19c6841e65afd871dcf9931fb2385ff126eada9c2e51cfa'
     'Private/Endpoints.ps1' = 'ec053d7c7d548f75f9e278f05d4adbe9de12d3231876d85ab1467387b7543ee5'
     'Private/Facts.ps1' = '39665c1633f00f8661347f47839b594c5d2ac6e171f004c8477b397d97d58bd2'
-    'Private/Health.ps1' = '46f5767514a4827d9c6f8e9f2d8afb49c45a7446574b368f574bf7ac784ac406'
+    'Private/Health.ps1' = '0526eef58aec103096bfb630e6294d1197ce7d61589bad675c42af5f9365f48a'
     'Private/Http.ps1' = '5dcbd81f450414832daee56dcf1ed25d91912ee41a558899af8720e16637c85d'
     'Private/Insight.ps1' = 'f67adea637361c3fc79308b01f0f4e987917b1d3569ab1481fc6d440fa5791cd'
     'Private/Json.ps1' = '53c434cad16886edf3e7c4a5f1d24cc09147a5cd3f6eae25d9b55db61e74da61'

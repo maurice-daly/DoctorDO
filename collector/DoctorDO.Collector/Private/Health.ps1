@@ -115,14 +115,34 @@ function Test-DDFirewallRulesComplete {
 }
 
 function Get-DDEnforcementText {
-    # Why Windows says a rule is not in force (Get-NetFirewallRule EnforcementStatus), in words.
+    <#
+        Why Windows says a rule is not in force (Get-NetFirewallRule EnforcementStatus), in words.
+
+        Windows gives the reasons of all the rule's profiles together, and ProfileInactive stands for the profiles that
+        are not active now. A rule set for every profile always covers the active one, so beside another reason
+        ProfileInactive only means its other profiles: the built-in Delivery Optimization rules (profile Any) while
+        policy turns off local rule merging on the active profile show LocalFirewallRulesNotAllowed and ProfileInactive
+        (Windows 11, 27 Nov 2026), and saying "its profile is not the active one" there was wrong (it was quoted as a
+        cause in OpenIntuneBaseline issue 275). So ProfileInactive is left out beside another reason for such a rule,
+        hedged for a rule set for only some profiles (the collector does not know which profile is active), and said
+        plainly when it is the only reason.
+    #>
     [CmdletBinding()]
     [OutputType([string])]
     param([Parameter(Mandatory)] $Rule)
-    $words = @(foreach ($s in @(Get-DDProp $Rule 'enforcementStatus')) {
-            switch ([string]$s) {
+    $reasons = @(@(Get-DDProp $Rule 'enforcementStatus') | ForEach-Object { [string]$_ } | Where-Object { $_ })
+    $profiles = @(@(Get-DDProp $Rule 'profiles') | ForEach-Object { [string]$_ } | Where-Object { $_ -in 'Domain', 'Private', 'Public' })
+    $everyProfile = @($profiles | Select-Object -Unique).Count -eq 3
+    $alone = @($reasons | Where-Object { $_ -ne 'ProfileInactive' }).Count -eq 0
+    $named = $(if ($profiles.Count -gt 0) { ' (' + ($profiles -join ', ') + ')' } else { '' })
+    $words = @(foreach ($s in $reasons) {
+            switch ($s) {
                 'LocalFirewallRulesNotAllowed' { 'the firewall policy ignores local rules (local rule merging is off) and this is one'; break }
-                'ProfileInactive' { 'its profile is not the active one'; break }
+                'ProfileInactive' {
+                    if ($alone) { $(if ($profiles.Count -gt 1) { "none of its profiles$named is the active one" } else { "its profile$named is not the active one" }) }
+                    elseif (-not $everyProfile) { "not all of its profiles$named are active" }
+                    break
+                }
                 'OptimizedOut' { 'Windows optimised it out'; break }
                 'LocalPortProtocolConflict' { 'its port condition conflicts with another rule'; break }
                 default { [string]$s }
